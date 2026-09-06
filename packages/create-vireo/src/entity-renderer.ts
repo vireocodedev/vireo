@@ -574,7 +574,6 @@ ${
 `
     : ""
 }}
-}
 `;
 }
 
@@ -1126,7 +1125,7 @@ import {
   ${muiImports.join(",\n  ")},
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { sigAppPreferences } from "@/app/ui/preferences/signals/sigAppPreferences";
+import { useAppPreferences } from "@/app/ui/preferences/hooks/useAppPreferences";
 import { ${names.fileStem}Api } from "../api/${names.fileStem}.api";
 import { createDefault${names.className}, ${names.className}Schema, ${names.fileStem}ToCreateRequest, ${names.fileStem}ToPatchRequest, type ${names.className} } from "../models/${names.className}";
 import en from "../localization/${names.fileStem}.en";
@@ -1136,7 +1135,7 @@ const queryKey = [${JSON.stringify(names.plural)}] as const;
 
 export function ${names.pageClass}() {
   const queryClient = useQueryClient();
-  const preferences = sigAppPreferences.value;
+  const { preferences } = useAppPreferences();
   const copy = preferences.locale === "hr" ? hr : en;
   const [searchText, setSearchText] = React.useState("");
   const [draft, setDraft] = React.useState<${names.className} | null>(null);

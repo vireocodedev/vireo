@@ -420,9 +420,9 @@ test("generated pages import only controls used by the schema", async () => {
 
   await generateEntity({ projectDirectory: root, schemaPath });
   const page = await readFile(join(root, "frontend/src/generated/api-clients/pages/AppPageApiClients.tsx"), "utf8");
-  assert.match(page, /import \{ sigAppPreferences \} from "@\/app\/ui\/preferences\/signals\/sigAppPreferences"/u);
-  assert.match(page, /const preferences = sigAppPreferences\.value/u);
-  assert.doesNotMatch(page, /useAppPreferences/u);
+  assert.match(page, /import \{ useAppPreferences \} from "@\/app\/ui\/preferences\/hooks\/useAppPreferences"/u);
+  assert.match(page, /const \{ preferences \} = useAppPreferences\(\)/u);
+  assert.doesNotMatch(page, /sigAppPreferences/u);
   assert.doesNotMatch(page, /\bCheckbox\b/u);
   assert.doesNotMatch(page, /\bFormControlLabel\b/u);
   assert.doesNotMatch(page, /\bMenuItem\b/u);
@@ -490,6 +490,7 @@ test("generates target-first many-to-one create, patch, response, and query cont
   const service = await readFile(join(javaRoot, "PurchaseOrderService.java"), "utf8");
   const response = await readFile(join(javaRoot, "PurchaseOrderResponse.java"), "utf8");
   const controller = await readFile(join(javaRoot, "PurchaseOrderController.java"), "utf8");
+  const repository = await readFile(join(javaRoot, "PurchaseOrderRepository.java"), "utf8");
   const model = await readFile(join(root, "frontend/src/generated/purchase-orders/models/PurchaseOrder.ts"), "utf8");
   const api = await readFile(join(root, "frontend/src/generated/purchase-orders/api/purchaseOrder.api.ts"), "utf8");
   const migration = await readFile(join(root, "src/main/resources/db/migration/V4__create_purchase_order.sql"), "utf8");
@@ -509,6 +510,12 @@ test("generates target-first many-to-one create, patch, response, and query cont
   assert.match(response, /Long customerId[\s\S]*String customerName/u);
   assert.match(controller, /@PatchMapping\("\/\{id\}"\)/u);
   assert.match(controller, /@Valid @RequestBody PurchaseOrderPatchRequest/u);
+  assert.match(repository, /Optional<PurchaseOrder> findWithRelationsByIdAndDeletedFalse\(Long id\);/u);
+  assert.equal(
+    (repository.match(/\{/gu) ?? []).length,
+    (repository.match(/\}/gu) ?? []).length,
+    "generated Repository.java must have balanced braces",
+  );
   assert.match(model, /export type PurchaseOrderCreateRequest/u);
   assert.match(model, /export type PurchaseOrderPatchRequest/u);
   assert.match(api, /httpPatch/u);
