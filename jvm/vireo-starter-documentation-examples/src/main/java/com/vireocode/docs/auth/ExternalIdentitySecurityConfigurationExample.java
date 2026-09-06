@@ -64,9 +64,9 @@ public class ExternalIdentitySecurityConfigurationExample {
             ObjectMapper objectMapper, Clock clock) throws Exception {
         return http
                 .securityMatcher("/api/external/**")
-                // codeql[java/spring-disabled-csrf-protection]: this chain is header-only,
-                // stateless (no session cookie), and path-scoped, so it carries no CSRF risk.
-                .csrf(AbstractHttpConfigurer::disable)
+                // This chain is header-only, stateless (no session cookie), and path-scoped,
+                // so disabling CSRF here carries no risk; it is intentional, not an oversight.
+                .csrf(AbstractHttpConfigurer::disable) // lgtm[java/spring-disabled-csrf-protection]
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().authenticated())
                 .addFilterBefore(new ExternalApiKeyAuthenticationFilter(apiKeys, objectMapper, clock),
