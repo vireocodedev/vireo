@@ -23,20 +23,20 @@
     "projectUpgrades": "contracts/project-upgrade-policy.json"
   },
   "current": {
-    "id": "npm-0.8.7_jvm-0.3.1",
+    "id": "npm-0.8.7_jvm-0.4.0",
     "npm": [
       { "name": "create-vireo", "version": "0.8.7", "role": "project-scaffolder" },
       { "name": "@vireocodedev/history", "version": "0.2.2", "role": "history-domain" },
-      { "name": "@vireocodedev/infrastructure", "version": "0.2.2", "role": "browser-infrastructure" },
+      { "name": "@vireocodedev/infrastructure", "version": "0.3.0", "role": "browser-infrastructure" },
       { "name": "@vireocodedev/localization", "version": "0.2.2", "role": "localization-resources" },
       { "name": "@vireocodedev/query", "version": "0.2.2", "role": "query-contracts" },
       { "name": "@vireocodedev/shell", "version": "0.2.2", "role": "application-shell-contracts" },
       { "name": "@vireocodedev/sqlite", "version": "0.2.3", "role": "offline-persistence" },
-      { "name": "@vireocodedev/ui", "version": "0.3.1", "role": "react-design-system" }
+      { "name": "@vireocodedev/ui", "version": "0.3.2", "role": "react-design-system" }
     ],
     "maven": {
       "group": "com.vireocode",
-      "version": "0.3.1",
+      "version": "0.4.0",
       "modules": ["vireo-bom", "vireo-core", "vireo-auth", "vireo-query", "vireo-offline", "vireo-history"]
     },
     "template": {
@@ -66,18 +66,18 @@
       {
         "id": "current-alpha",
         "status": "supported",
-        "release": "npm-0.8.7_jvm-0.3.1",
+        "release": "npm-0.8.7_jvm-0.4.0",
         "npm": {
           "create-vireo": "0.8.7",
           "@vireocodedev/history": "0.2.2",
-          "@vireocodedev/infrastructure": "0.2.2",
+          "@vireocodedev/infrastructure": "0.3.0",
           "@vireocodedev/localization": "0.2.2",
           "@vireocodedev/query": "0.2.2",
           "@vireocodedev/shell": "0.2.2",
           "@vireocodedev/sqlite": "0.2.3",
-          "@vireocodedev/ui": "0.3.1"
+          "@vireocodedev/ui": "0.3.2"
         },
-        "mavenBom": "com.vireocode:vireo-bom:0.3.1",
+        "mavenBom": "com.vireocode:vireo-bom:0.4.0",
         "templateCommit": "0557990f024a8736b6e661f8fc264861deb99b65",
         "templateVersion": "0.8.7",
         "templateTag": "starter-template@0.8.7",
@@ -135,7 +135,7 @@
       "id": "0.3-alpha",
       "status": "active",
       "claim": "public-alpha",
-      "release": "npm-0.8.7_jvm-0.3.1",
+      "release": "npm-0.8.7_jvm-0.4.0",
       "eol": null,
       "compatibilityPolicy": "docs/COMPATIBILITY.md"
     }

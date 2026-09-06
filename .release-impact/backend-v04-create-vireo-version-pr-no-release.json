@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "artifact": "npm:create-vireo",
+  "decision": "no-release",
+  "justification": "This ecosystem version PR only refreshes create-vireo's release-identity fixture and upgrade-policy schema to the new npm-0.8.7_jvm-0.4.0 coordinate; create-vireo itself still publishes exclusively through the next Template/CLI adoption, not this JVM/classic-library release."
+}

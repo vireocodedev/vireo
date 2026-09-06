@@ -10,7 +10,7 @@ Data-heavy applications otherwise duplicate filter metadata, request parsing, Cr
 
 ```groovy
 dependencies {
-    implementation platform("com.vireocode:vireo-bom:0.3.1")
+    implementation platform("com.vireocode:vireo-bom:0.4.0")
     implementation "com.vireocode:vireo-query"
 }
 ```

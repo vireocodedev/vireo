@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "artifact": "jvm:vireo-query",
+  "decision": "no-release",
+  "justification": "Only its README version reference is carried by the shared jvm/gradle.properties bump; no code in this module changed."
+}

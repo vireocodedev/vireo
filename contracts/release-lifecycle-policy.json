@@ -13,7 +13,7 @@
     {
       "id": "0.3-alpha",
       "status": "active",
-      "release": "npm-0.8.7_jvm-0.3.1",
+      "release": "npm-0.8.7_jvm-0.4.0",
       "introducedOn": "2026-08-26",
       "statusEffectiveOn": "2026-08-30",
       "deprecatedOn": null,

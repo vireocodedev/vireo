@@ -10,7 +10,7 @@ Gradle:
 
 ```groovy
 dependencies {
-    implementation platform("com.vireocode:vireo-bom:0.3.1")
+    implementation platform("com.vireocode:vireo-bom:0.4.0")
     implementation "com.vireocode:vireo-auth"
 }
 ```
@@ -23,7 +23,7 @@ Maven:
     <dependency>
       <groupId>com.vireocode</groupId>
       <artifactId>vireo-bom</artifactId>
-      <version>0.3.1</version>
+      <version>0.4.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -63,13 +63,13 @@ pull an identity provider into every application.
 
 ## Default endpoints
 
-| Operation | Method | Default path |
-| --- | --- | --- |
-| Login | `POST` | `/api/auth/login` |
-| Logout | `POST` | `/api/auth/logout` |
-| Current user | `GET` | `/api/auth/me` |
-| Change username | `PUT` | `/api/account/username` |
-| Change password | `PUT` | `/api/account/password` |
+| Operation       | Method | Default path            |
+| --------------- | ------ | ----------------------- |
+| Login           | `POST` | `/api/auth/login`       |
+| Logout          | `POST` | `/api/auth/logout`      |
+| Current user    | `GET`  | `/api/auth/me`          |
+| Change username | `PUT`  | `/api/account/username` |
+| Change password | `PUT`  | `/api/account/password` |
 
 All paths are configurable under `vireo.starter.auth`. The account endpoints are registered only with the default database `UserDetailsService`; replacing the user store withdraws them automatically.
 

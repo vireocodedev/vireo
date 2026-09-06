@@ -10,7 +10,7 @@ Vireo's JVM modules are released on one version line and compiled against one Sp
 
 ```groovy
 dependencies {
-    implementation platform("com.vireocode:vireo-bom:0.3.1")
+    implementation platform("com.vireocode:vireo-bom:0.4.0")
 
     implementation "com.vireocode:vireo-core"
     implementation "com.vireocode:vireo-auth"
@@ -30,7 +30,7 @@ Declare only the modules the application uses. `platform(...)` is the normal def
     <dependency>
       <groupId>com.vireocode</groupId>
       <artifactId>vireo-bom</artifactId>
-      <version>0.3.1</version>
+      <version>0.4.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
@@ -49,13 +49,13 @@ Declare only the modules the application uses. `platform(...)` is the normal def
 
 The BOM aligns these published artifacts to its own version:
 
-| Artifact | Capability |
-| --- | --- |
-| `vireo-core` | Shared web, persistence, service, migration, and extension foundations |
-| `vireo-auth` | Replaceable session-authentication defaults |
-| `vireo-query` | Typed query metadata, predicates, relation options, and saved filters |
-| `vireo-history` | Neutral audit recording and authenticated history reads |
-| `vireo-offline` | Authenticated replay, hydration revisions, and change streaming |
+| Artifact        | Capability                                                             |
+| --------------- | ---------------------------------------------------------------------- |
+| `vireo-core`    | Shared web, persistence, service, migration, and extension foundations |
+| `vireo-auth`    | Replaceable session-authentication defaults                            |
+| `vireo-query`   | Typed query metadata, predicates, relation options, and saved filters  |
+| `vireo-history` | Neutral audit recording and authenticated history reads                |
+| `vireo-offline` | Authenticated replay, hydration revisions, and change streaming        |
 
 It also imports the Spring Boot dependency BOM used to compile the release. That supplies compatible third-party defaults; it does not apply the Spring Boot Gradle plugin, create an executable application, or install any Vireo capability.
 
