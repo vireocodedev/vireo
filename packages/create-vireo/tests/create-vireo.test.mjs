@@ -1,11 +1,12 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { validateCodexCustomization } from "../../../scripts/codex-customization-policy.mjs";
 import {
   createVireo,
   findExampleReferences,
@@ -20,7 +21,14 @@ const fixtureReleaseIdentity = JSON.parse(
   await readFile(new URL("../fixtures/release-identity.json", import.meta.url), "utf8"),
 );
 const createVireoSource = await readFile(new URL("../src/index.ts", import.meta.url), "utf8");
-const applicationSkillNames = ["vireo-app-feature-author", "vireo-app-upgrader", "vireo-app-production-readiness"];
+const applicationSkillNames = [
+  "vireo-app",
+  "vireo-app-feature-author",
+  "vireo-app-upgrader",
+  "vireo-app-production-readiness",
+  "vireo-app-generate",
+  "vireo-app-operate",
+];
 const fixtureTemplateTag = `starter-template@${fixtureReleaseIdentity.createVireoVersion}`;
 const fixtureTemplateReleaseContractUrl =
   `https://github.com/vireocodedev/vireo-template/blob/${encodeURIComponent(fixtureTemplateTag)}` +
@@ -75,11 +83,22 @@ test("fresh frontend Doctor projection matches the frozen 0.8.2 upgrade byte con
 async function writeApplicationSkill(template, name) {
   const skill = join(template, ".vireo", "application", ".agents", "skills", name);
   await mkdir(join(skill, "agents"), { recursive: true });
-  await writeFile(join(skill, "SKILL.md"), `---\nname: ${name}\ndescription: Fixture consumer skill.\n---\n`);
+  const workflow = name === "vireo-app" ? "references/workflow.md" : "../vireo-app/references/workflow.md";
+  await writeFile(
+    join(skill, "SKILL.md"),
+    `---\nname: ${name}\ndescription: Use for consumer fixture work; not maintainer operations.\n---\nRead [workflow](${workflow}).\n`,
+  );
   await writeFile(
     join(skill, "agents", "openai.yaml"),
-    `interface:\n  display_name: "Fixture App Skill"\n  short_description: "Fixture consumer skill"\n  default_prompt: "Use $${name} for fixture work."\n`,
+    `interface:\n  display_name: "Fixture App Skill"\n  short_description: "Fixture consumer skill"\n  default_prompt: "Use $${name} for fixture work."\n${name === "vireo-app-operate" ? "policy:\n  allow_implicit_invocation: false\n" : ""}`,
   );
+  if (name === "vireo-app") {
+    await mkdir(join(skill, "references"));
+    await writeFile(
+      join(skill, "references/workflow.md"),
+      "# Application workflow\nPreserve application-owned source.\n",
+    );
+  }
 }
 
 async function assertProjectedApplicationGuidance(target) {
@@ -92,6 +111,8 @@ async function assertProjectedApplicationGuidance(target) {
     assert.equal(managedPaths.has(`.agents/skills/${name}/SKILL.md`), true, `${name} skill is managed`);
     assert.equal(managedPaths.has(`.agents/skills/${name}/agents/openai.yaml`), true, `${name} metadata is managed`);
   }
+  assert.equal(managedPaths.has(".agents/skills/vireo-app/references/workflow.md"), true);
+  assert.deepEqual(validateCodexCustomization(target), [], "projected references and metadata remain valid");
   await assert.rejects(readFile(join(target, ".agents", "skills", "vireo-template-maintainer", "SKILL.md")), /ENOENT/u);
 }
 
@@ -421,6 +442,37 @@ printf 'Database recovery rehearsal passed: %s items, %s users, %s migrations.\n
   );
   return template;
 }
+
+test(
+  "projects real consumer skill bundles into both profiles without maintainer leakage",
+  {
+    skip: !process.env.VIREO_CODEX_TEMPLATE_DIR,
+  },
+  async () => {
+    const root = await mkdtemp(join(tmpdir(), "vireo-codex-projection-"));
+    try {
+      const template = await fixture(root);
+      const source = join(process.env.VIREO_CODEX_TEMPLATE_DIR, ".vireo/application/.agents/skills");
+      await rm(join(template, ".vireo/application/.agents/skills"), { recursive: true, force: true });
+      await cp(source, join(template, ".vireo/application/.agents/skills"), { recursive: true });
+      for (const profile of ["frontend", "full-stack"]) {
+        const target = join(root, `real-skills-${profile}`);
+        await createVireo({ directory: target, profile, git: false, templateDirectory: template });
+        await assertProjectedApplicationGuidance(target);
+        const managed = JSON.parse(await readFile(join(target, ".vireo/managed-files.json"), "utf8"));
+        for (const file of managed.files.filter(file => file.path.startsWith(".agents/skills/"))) {
+          assert.deepEqual(
+            await readFile(join(target, file.path)),
+            await readFile(join(source, file.path.slice(".agents/skills/".length))),
+            `${profile}: ${file.path} preserves exact reviewed skill bytes`,
+          );
+        }
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  },
+);
 
 test("creates and customizes a project atomically from a local fixture", async () => {
   const root = await mkdtemp(join(tmpdir(), "create-vireo-test-"));

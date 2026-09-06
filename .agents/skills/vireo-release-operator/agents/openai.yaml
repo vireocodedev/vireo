@@ -1,4 +1,6 @@
 interface:
   display_name: "Vireo Release Operator"
-  short_description: "Prepare coordinated Vireo framework releases"
-  default_prompt: "Use $vireo-release-operator to prepare a coordinated Vireo release."
+  short_description: "Plan guarded release phases and exact approvals"
+  default_prompt: "Use $vireo-release-operator to plan the release; prepare, reconcile, or execute only within the explicitly authorized phase and exact target."
+policy:
+  allow_implicit_invocation: false

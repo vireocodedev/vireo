@@ -52,7 +52,25 @@ Schema format version 1 remains common to both targets. Its Java package, databa
 permissions, and backend capability fields are retained so one reviewed schema can
 cross a team boundary; the frontend renderer ignores backend-only values.
 
-The v1 identifier is a generated `Long`. Explicit singular/plural names avoid English pluralization guesses. Acronyms are accepted when portable. Relationships, compound identifiers, and offline replay are represented as deliberate admission boundaries rather than partially generated code. Offline guarantees belong to Phase 4; relationship generation requires an admitted relational fixture.
+The v1 identifier is a generated `Long`. Explicit singular/plural names avoid English pluralization guesses. Acronyms are accepted when portable. Compound identifiers and offline replay remain out of scope; offline guarantees belong to Phase 4.
+
+## Many-to-one relationships
+
+Schema v1 admits a target-first `many-to-one` relationship:
+
+```json
+{
+  "name": "customer",
+  "kind": "many-to-one",
+  "target": "Customer",
+  "required": true,
+  "displayField": "legalName"
+}
+```
+
+`Customer` must already be exactly one managed, full-stack capability in the same project and use generator contract 0.3.0, 0.3.1, or 0.4.0. Its canonical schema and manifest must agree, its migration version must be lower than the source migration, and `legalName` must be a `string` or `text` field. Ejected, legacy 0.2.0, stale, frontend-only, self-referencing, and ambiguous targets fail before files are written.
+
+The generator creates a lazy foreign key (`customer_id`) without cascade delete. Write DTOs use only `customerId`; responses expose `customerId` and the stable display property `customerName`, populated from the target's declared `displayField`. If both capabilities enable query, Vireo emits relation-selection metadata for that display field.
 
 Full-stack schemas use an unquoted, portable H2/PostgreSQL identifier policy. Table names and field-derived column names cannot be reserved words, cannot conflict with generated audit columns, and must remain unique after lower-camel to lower-snake conversion. Tables, columns, generated enum checks, and generated query indexes must each fit PostgreSQL's 63-character identifier limit. The CLI reports the exact derived identifier before writing files; shorten the table or field name instead of relying on database truncation or quoting.
 

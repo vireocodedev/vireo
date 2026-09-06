@@ -26,4 +26,15 @@ class ApiErrorTest {
         assertThatThrownBy(() -> error.errors().put("third", "three"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
+
+    @Test
+    void retainsTheLegacyConstructorAndExposesTheGenericStableCode() {
+        ApiError legacy = new ApiError(400, "Bad request", null, Instant.EPOCH);
+        ApiError canonical = new ApiError(400, "VALIDATION_FAILED", "Bad request", null, Instant.EPOCH);
+
+        assertThat(legacy.code()).isEqualTo("REQUEST_FAILED");
+        assertThat(canonical.code()).isEqualTo("VALIDATION_FAILED");
+        assertThatThrownBy(() -> new ApiError(400, "not-valid", "Bad request", null, Instant.EPOCH))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

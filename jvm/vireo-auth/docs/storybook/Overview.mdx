@@ -22,11 +22,18 @@ Adding the dependency auto-configures:
 
 Applications may replace each major Spring bean independently. Replacing `UserDetailsService` also withdraws the database-specific account endpoints; replacing `SecurityFilterChain` transfers the complete HTTP security policy to the application.
 
+The external-identity guide shows a compiled LDAP replacement plus ordered,
+path-scoped stateless API-key and browser-session chains. Defining either chain
+transfers chain ordering and matching ownership to the application; the browser
+chain can delegate its session policy to `StarterSessionSecurity`. Those
+integrations do not expand Vireo Auth's default runtime dependencies.
+
 ## Public contract
 
 - `LoginRequest`, `LoginResponse`, `CurrentUserResponse`, and the account request/response records define the default wire contract.
 - `StarterAuthProperties` owns enablement, endpoint paths, API matching, and documentation access.
 - `StarterHttpSecurityCustomizer` adds narrow rules before the default authenticated API matcher.
+- `StarterSessionSecurity` builds that standard browser chain when an application also declares narrower chains.
 - `StarterUser` and `StarterUserRepository` belong only to the optional default database user model.
 
 Credential-bearing records redact their values from `toString()`. Endpoint paths are validated at startup and must be absolute and mutually distinct.

@@ -298,6 +298,7 @@ const GENERATED_AUDIT_COLUMNS = new Set([
   "keywords",
   "deleted",
 ]);
+const RESERVED_RELATIONSHIP_NAMES = new Set(["id"]);
 
 export function entityFieldSqlName(value: string) {
   return value.replace(/([a-z0-9])([A-Z])/gu, "$1_$2").toLocaleLowerCase("en-US");
@@ -497,6 +498,30 @@ function validateField(value: unknown, index: number, problems: string[]): Entit
   return field;
 }
 
+function validateRelationship(value: unknown, index: number, problems: string[]): EntityRelationshipSchema | null {
+  const path = `relationships[${index}]`;
+  if (!isObject(value)) {
+    problems.push(`${path} must be an object`);
+    return null;
+  }
+  rejectUnknown(value, ["name", "kind", "target", "required", "displayField"], path, problems);
+  const name = requiredString(value, "name", path, problems);
+  const kind = requiredString(value, "kind", path, problems);
+  const target = requiredString(value, "target", path, problems);
+  const displayField = requiredString(value, "displayField", path, problems);
+  if (name && !validFieldIdentifier(name))
+    problems.push(`${path}.name must be a portable lower-camel Java/TypeScript identifier`);
+  if (RESERVED_RELATIONSHIP_NAMES.has(name)) problems.push(`${path}.name is reserved`);
+  if (kind !== "many-to-one") problems.push(`${path}.kind must be "many-to-one"`);
+  if (target && (!/^[A-Z][A-Za-z0-9]*$/u.test(target) || !validJavaIdentifier(target)))
+    problems.push(`${path}.target must be a portable UpperCamelCase Java/TypeScript identifier`);
+  if (displayField && !validFieldIdentifier(displayField))
+    problems.push(`${path}.displayField must be a portable lower-camel Java/TypeScript identifier`);
+  if (value.required !== undefined && typeof value.required !== "boolean")
+    problems.push(`${path}.required must be a boolean`);
+  return value as EntityRelationshipSchema;
+}
+
 export function parseEntitySchema(value: unknown): VireoEntitySchema {
   const problems: string[] = [];
   if (!isObject(value)) throw new EntitySchemaError(["document must be a JSON object"]);
@@ -580,12 +605,33 @@ export function parseEntitySchema(value: unknown): VireoEntitySchema {
     problems.push("field names must remain unique after lower_snake_case SQL conversion");
   if (!fields.some(field => field?.query?.searchable)) problems.push("at least one field must be query.searchable");
 
-  if (value.relationships !== undefined) {
-    if (!Array.isArray(value.relationships)) problems.push("relationships must be an array");
-    else if (value.relationships.length > 0)
+  const relationships =
+    value.relationships === undefined
+      ? []
+      : !Array.isArray(value.relationships)
+        ? (problems.push("relationships must be an array"), [])
+        : value.relationships.map((relationship, index) => validateRelationship(relationship, index, problems)).filter(Boolean);
+  const relationshipNames = relationships.map(relationship => relationship!.name);
+  const relationshipSqlNames = relationships.map(relationship => `${entityFieldSqlName(relationship!.name)}_id`);
+  if (new Set(relationshipNames).size !== relationshipNames.length) problems.push("relationship names must be unique");
+  if (new Set(relationshipSqlNames).size !== relationshipSqlNames.length)
+    problems.push("relationship names must remain unique after lower_snake_case SQL conversion");
+  for (const [index, relationship] of relationships.entries()) {
+    if (fieldNames.includes(relationship!.name))
+      problems.push(`relationships[${index}].name conflicts with a field name`);
+    const idName = `${relationship!.name}Id`;
+    if (fieldNames.includes(idName) || relationshipNames.includes(idName))
+      problems.push(`relationships[${index}].name-derived ${idName} conflicts with a field or relationship name`);
+    const responseDisplayName = `${relationship!.name}Name`;
+    if (fieldNames.includes(responseDisplayName) || relationshipNames.includes(responseDisplayName))
       problems.push(
-        "relationships are described by schema v1 but generation is deferred until a relational fixture is admitted",
+        `relationships[${index}].name-derived ${responseDisplayName} conflicts with a field or relationship name`,
       );
+    const column = `${entityFieldSqlName(relationship!.name)}_id`;
+    if (sqlFieldNames.includes(column))
+      problems.push(`relationships[${index}].name-derived ${column} conflicts with a scalar column`);
+    validateSqlIdentifier(column, `relationships[${index}].name-derived SQL identifier`, problems);
+    if (table) validateSqlIdentifier(`ix_${table}_${column}`, `relationships[${index}].name-derived index`, problems);
   }
 
   const localization = requiredObject(value, "localization", problems);

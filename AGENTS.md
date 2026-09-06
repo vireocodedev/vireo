@@ -4,10 +4,9 @@ This repository publishes the Vireo TypeScript packages, JVM modules, and `creat
 
 ## Routing
 
-- UI design-system components: read `packages/ui/AGENTS.md` and use `$starter-ui-component-author` when the work creates or completes a public component.
-- Project creation, entity generation, projection, or upgrades: read `packages/create-vireo/AGENTS.md`.
-- JVM modules or Maven publication: read `jvm/AGENTS.md`.
-- Repository policies, release evidence, and verification scripts: read `scripts/AGENTS.md`.
+- Start a framework task with [$vireo-framework](.agents/skills/vireo-framework/SKILL.md): one invocation routes plan, change/fix, review, docs, verify, readiness, release, create, or skills-only adoption through shared safeguards and the existing specialists. Human examples and permission boundaries: [Codex workflow](docs/CODEX.md).
+- Read scoped instructions for the touched surface: [UI](packages/ui/AGENTS.md), [creation/generation/projection/upgrades](packages/create-vireo/AGENTS.md), [JVM](jvm/AGENTS.md), or [policy/release scripts](scripts/AGENTS.md).
+- Plan/review is read-only by default. Implementation permits scoped ordinary edits and focused checks; installations, broader ownership, and release mutations are separate decisions. Preserve dirty work and coordinate heavy verification sequentially.
 
 ## Durable invariants
 
@@ -17,4 +16,4 @@ This repository publishes the Vireo TypeScript packages, JVM modules, and `creat
 - Use focused checks while editing; reserve repository-wide, Storybook, browser, and Gradle gates for coordinated final verification.
 - Do not publish, deploy, alter external release settings, or resolve application-owned upgrade work without explicit user authorization.
 
-Authoritative architecture and release routing live in `docs/ARCHITECTURE.md`, `docs/ECOSYSTEM_CONTRACT.md`, and `docs/RELEASE_LIFECYCLE.md`.
+Authoritative architecture and release routing live in [architecture](docs/ARCHITECTURE.md), [ecosystem contract](docs/ECOSYSTEM_CONTRACT.md), and [release lifecycle](docs/RELEASE_LIFECYCLE.md). Resolve source conflicts before release execution; a skill invocation is not release approval.

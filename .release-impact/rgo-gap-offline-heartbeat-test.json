@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "artifact": "jvm:vireo-offline",
+  "decision": "no-release",
+  "justification": "Test-only coverage pins existing heartbeat response headers without changing published runtime behavior."
+}

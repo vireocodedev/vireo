@@ -1,0 +1,17 @@
+{
+  "$schema": "https://vireocode.com/schemas/entity/v1.json",
+  "schemaVersion": 1,
+  "kind": "entity",
+  "entity": { "name": "PurchaseOrder", "plural": "purchase-orders" },
+  "database": { "table": "purchase_order", "migrationVersion": 4 },
+  "api": { "path": "/api/purchase-orders" },
+  "permissions": { "read": "hasRole('USER')", "manage": "hasRole('SUPERADMIN')" },
+  "capabilities": { "history": false, "offline": false, "query": true },
+  "fields": [
+    { "name": "number", "type": "string", "required": true, "query": { "searchable": true } }
+  ],
+  "relationships": [
+    { "name": "customer", "kind": "many-to-one", "target": "Customer", "required": true, "displayField": "legalName" }
+  ],
+  "localization": { "en": { "singular": "Purchase order", "plural": "Purchase orders" } }
+}

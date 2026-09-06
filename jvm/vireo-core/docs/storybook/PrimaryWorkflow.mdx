@@ -18,3 +18,5 @@ The complete source below is compiled by `vireo-starter-documentation-examples` 
 `EntityConfig` is immutable. Add a value such as `history(AppHistoryEntityType.PRODUCT)` only when the History artifact is installed and the aggregate truly requires an audit trail; application enums implement `HistoryEntityType` directly. Add relation-search fields only for valid entity paths.
 
 Customize `validateCreateRequest`, `validateUpdateRequest`, `validateDeleteRequest`, `buildCreateDomain`, `applyRelations`, or `performDelete`. Do not override `create`, `update`, or `delete`; Core rejects that at service construction because doing so could bypass history and offline invariants.
+
+For new endpoints, use `BaseRequestService` instead: its public operations are `create(CREATE)` and `patch(ID, PATCH)`, returning `RESPONSE`. Map relation IDs from writable requests and resolve them in `applyCreateRelations` / `applyPatchRelations`; return only relation display data from `RESPONSE`.

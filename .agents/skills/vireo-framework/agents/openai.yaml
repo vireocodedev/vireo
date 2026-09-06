@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vireo Framework"
+  short_description: "Route a safeguarded framework task end to end"
+  default_prompt: "Use $vireo-framework to route this task and complete the authorized workflow with scoped evidence and safeguards."

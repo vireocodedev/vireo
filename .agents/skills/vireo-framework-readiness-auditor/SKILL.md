@@ -1,9 +1,13 @@
 ---
 name: vireo-framework-readiness-auditor
-description: Use for public Vireo readiness audits; not narrow feature work without an audit request.
+description: "Use for public Vireo readiness audits; not narrow feature work without an audit request."
 ---
 
 # Vireo Framework Readiness Auditor
+
+Complete the [shared entry](../vireo-framework/references/workflow.md#entry),
+including on direct invocation. An audit is read-only by default: inspect existing
+evidence and return findings, without tests, builds, generated reports, or repairs.
 
 Use this skill for a public-beta, release, or framework-readiness audit. Do not apply it to a narrow feature request unless that feature asks for a readiness review.
 
@@ -12,4 +16,11 @@ Use this skill for a public-beta, release, or framework-readiness audit. Do not 
 - Check the framework through a real consumer perspective: installable artifacts, generated app behavior, upgrade path, and documentation—not source compilation alone.
 - Record evidence with its source and date. Prefer existing deterministic policies over adding duplicate audit scripts.
 
-Run focused policy checks for changed findings; use the coordinated public gate only when a full audit is authorized.
+Only run focused checks when verification is requested, after inspecting current
+scripts and their effects. Broad public/consumer gates require explicit sequential
+coordination, even during a full audit. Repository-fixable findings are proposed
+work, not automatic permission to edit policies or manufacture missing evidence.
+
+Complete the [shared exit](../vireo-framework/references/workflow.md#exit), separating
+observed evidence, missing proof, human gates, and the precise readiness claim that
+the available evidence supports.

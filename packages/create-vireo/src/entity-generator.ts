@@ -5,15 +5,19 @@ import { format, resolveConfig } from "prettier";
 import { readEntitySchema } from "./entity-schema.js";
 import {
   createWireContract,
+  createV3WireContract,
   entityNames,
   renderCapabilityRegistry,
   renderEntityFiles,
   type GeneratedFile,
+  type ResolvedEntityRelationship,
   type VireoGenerationTarget,
   type VireoProjectMetadata,
 } from "./entity-renderer.js";
 
-export const VIREO_GENERATOR_VERSION = "0.3.0";
+export const VIREO_GENERATOR_VERSION = "0.4.0";
+const PREVIOUS_GENERATOR_VERSION = "0.3.1";
+const PREVIOUS_PREVIOUS_GENERATOR_VERSION = "0.3.0";
 const LEGACY_GENERATOR_VERSION = "0.2.0";
 
 type ManifestFile = Pick<GeneratedFile, "ownership" | "path" | "role"> & {
@@ -94,6 +98,21 @@ export function stableJson(value: unknown) {
 
 export function sha256(value: string | Uint8Array) {
   return createHash("sha256").update(value).digest("hex");
+}
+
+function createPreviousWireContract(
+  schema: Awaited<ReturnType<typeof readEntitySchema>>,
+  target: VireoGenerationTarget,
+) {
+  const contract = createV3WireContract(schema, target);
+  if (target !== "full-stack") return contract;
+  return {
+    ...contract,
+    semantics: {
+      ...contract.semantics,
+      errors: "Spring ProblemDetail with field violations when validation fails",
+    },
+  };
 }
 
 async function pathExists(path: string) {
@@ -238,6 +257,84 @@ async function manifests(root: string) {
   >;
 }
 
+async function resolveRelationships(
+  root: string,
+  project: VireoProjectMetadata,
+  schema: Awaited<ReturnType<typeof readEntitySchema>>,
+): Promise<ResolvedEntityRelationship[]> {
+  const declared = schema.relationships ?? [];
+  if (declared.length === 0) return [];
+  if ((project.profile ?? "full-stack") !== "full-stack")
+    throw new VireoGeneratorError(
+      "VIR-GEN-002",
+      "Relationships require a managed full-stack target in the same Vireo project.",
+    );
+
+  const records = await manifests(root);
+  const resolved: ResolvedEntityRelationship[] = [];
+  for (const relationship of declared) {
+    if (relationship.target === schema.entity.name)
+      throw new VireoGeneratorError("VIR-GEN-002", `Relationship ${relationship.name} cannot target its own entity.`);
+    const candidates = records.filter(
+      record => record.entity === relationship.target && (record.target ?? "full-stack") === "full-stack",
+    );
+    if (candidates.length !== 1)
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship ${relationship.name} must target exactly one previously generated, managed full-stack ${relationship.target} capability in this project.`,
+      );
+    const targetManifest = candidates[0]!;
+    if (
+      ![VIREO_GENERATOR_VERSION, PREVIOUS_GENERATOR_VERSION, PREVIOUS_PREVIOUS_GENERATOR_VERSION].includes(
+        targetManifest.generatorVersion,
+      )
+    )
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship target ${relationship.target} has unsupported generator version ${JSON.stringify(targetManifest.generatorVersion)}.`,
+      );
+    const targetSchemaPath = await safeManagedPath(root, targetManifest.schemaPath);
+    if (!(await pathExists(targetSchemaPath)))
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship target ${relationship.target} has no canonical schema artifact.`,
+      );
+    const targetSchema = await readEntitySchema(targetSchemaPath);
+    if (
+      targetManifest.entity !== targetSchema.entity.name ||
+      targetManifest.plural !== targetSchema.entity.plural ||
+      targetManifest.schemaDigest !== sha256(stableJson(targetSchema))
+    )
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship target ${relationship.target} has stale or inconsistent managed metadata. Regenerate or eject it before referencing it.`,
+      );
+    for (const file of targetManifest.files.filter(
+      file => file.ownership === "generated-once" || file.role === "contract",
+    )) {
+      const filePath = await safeManagedPath(root, file.path);
+      if (!(await pathExists(filePath)) || (await currentHash(filePath)) !== file.sha256)
+        throw new VireoGeneratorError(
+          "VIR-GEN-002",
+          `Relationship target ${relationship.target} has stale or customized managed files. Regenerate or eject it before referencing it.`,
+        );
+    }
+    if (targetSchema.database.migrationVersion >= schema.database.migrationVersion)
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship ${relationship.name} requires database.migrationVersion to be greater than target ${relationship.target}'s migration version.`,
+      );
+    const displayField = targetSchema.fields.find(field => field.name === relationship.displayField);
+    if (!displayField || (displayField.type !== "string" && displayField.type !== "text"))
+      throw new VireoGeneratorError(
+        "VIR-GEN-002",
+        `Relationship ${relationship.name}.displayField must name a string or text field on ${relationship.target}.`,
+      );
+    resolved.push({ ...relationship, targetSchema, targetNames: entityNames(targetSchema, project) });
+  }
+  return resolved;
+}
+
 async function currentHash(path: string) {
   return sha256(await readFile(path));
 }
@@ -267,7 +364,7 @@ function contractCritical(file: ManifestFile) {
   return (
     file.role === "contract" ||
     file.role === "migration" ||
-    /DTO\.java$|Controller\.java$|\/models\/|\/api\//u.test(file.path)
+    /(?:DTO|CreateRequest|PatchRequest|Response)\.java$|Controller\.java$|\/models\/|\/api\//u.test(file.path)
   );
 }
 
@@ -315,13 +412,14 @@ export async function generateEntity(options: GenerateEntityOptions): Promise<Ge
   if (target === "full-stack" && profile === "frontend")
     throw new VireoGeneratorError("VIR-GEN-002", "A frontend project cannot generate full-stack files.");
   const schema = await readEntitySchema(resolve(projectRoot, options.schemaPath));
+  const relationships = await resolveRelationships(projectRoot, project, schema);
   const canonicalSchema = stableJson(schema);
   const schemaDigest = sha256(canonicalSchema);
-  const contract = createWireContract(schema, target);
+  const contract = createWireContract(schema, target, relationships);
   const contractJson = stableJson(contract);
   const contractDigest = sha256(contractJson);
   const names = entityNames(schema, project);
-  const generatedFiles = renderEntityFiles(schema, project, schemaDigest, target);
+  const generatedFiles = renderEntityFiles(schema, project, schemaDigest, target, relationships);
   const schemaFile = `.vireo/schemas/${names.plural}.json`;
   const contractFile = `.vireo/contracts/${names.plural}.contract.json`;
   const priorManifest = options.outputDirectory
@@ -456,12 +554,23 @@ export async function checkGeneratedEntities(projectDirectory: string): Promise<
       if (!(await pathExists(schemaPath))) problems.push(`missing canonical schema ${record.schemaPath}`);
       else {
         try {
-          if (record.generatorVersion === VIREO_GENERATOR_VERSION) {
+          if (
+            record.generatorVersion === VIREO_GENERATOR_VERSION ||
+            record.generatorVersion === PREVIOUS_GENERATOR_VERSION ||
+            record.generatorVersion === PREVIOUS_PREVIOUS_GENERATOR_VERSION
+          ) {
             const schema = await readEntitySchema(schemaPath);
             const canonical = stableJson(schema);
             if (sha256(canonical) !== record.schemaDigest)
               problems.push("canonical schema digest differs from the manifest");
-            const contract = stableJson(createWireContract(schema, record.target ?? project.profile ?? "full-stack"));
+            const target = record.target ?? project.profile ?? "full-stack";
+            const contract = stableJson(
+              record.generatorVersion === VIREO_GENERATOR_VERSION
+                ? createWireContract(schema, target, await resolveRelationships(root, project, schema))
+                : record.generatorVersion === PREVIOUS_GENERATOR_VERSION
+                  ? createV3WireContract(schema, target)
+                  : createPreviousWireContract(schema, target),
+            );
             if (sha256(contract) !== record.contractDigest)
               problems.push("derived wire contract digest differs from the schema");
           } else if (record.generatorVersion === LEGACY_GENERATOR_VERSION) {
@@ -474,7 +583,9 @@ export async function checkGeneratedEntities(projectDirectory: string): Promise<
             sha256(stableJson(await readJson(contractPath))) !== record.contractDigest
           )
             problems.push(
-              record.generatorVersion === LEGACY_GENERATOR_VERSION
+              record.generatorVersion === LEGACY_GENERATOR_VERSION ||
+                record.generatorVersion === PREVIOUS_GENERATOR_VERSION ||
+                record.generatorVersion === PREVIOUS_PREVIOUS_GENERATOR_VERSION
                 ? "legacy wire-contract artifact is missing or stale"
                 : "wire-contract artifact is missing or stale",
             );

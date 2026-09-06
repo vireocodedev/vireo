@@ -80,6 +80,9 @@ public class com.vireocode.vireo.auth.StarterAuthProperties
 public abstract interface com.vireocode.vireo.auth.StarterHttpSecurityCustomizer
     public abstract void com.vireocode.vireo.auth.StarterHttpSecurityCustomizer.customize(org.springframework.security.config.annotation.web.builders.HttpSecurity) throws java.lang.Exception
 
+public final class com.vireocode.vireo.auth.StarterSessionSecurity
+    public org.springframework.security.web.SecurityFilterChain com.vireocode.vireo.auth.StarterSessionSecurity.build(org.springframework.security.config.annotation.web.builders.HttpSecurity) throws java.lang.Exception
+
 public class com.vireocode.vireo.auth.StarterUser
     extends com.vireocode.vireo.base.BaseEntity
     public com.vireocode.vireo.auth.StarterUser()

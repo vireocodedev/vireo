@@ -51,7 +51,7 @@ public class GlobalExceptionHandler {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 fieldErrors.merge(error.getField(), safeMessage(error.getDefaultMessage()), this::mergeMessages));
-        return badRequest(fieldErrors);
+        return validationFailed(fieldErrors);
     }
 
     @ExceptionHandler(BindException.class)
@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         Map<String, String> fieldErrors = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 fieldErrors.merge(error.getField(), safeMessage(error.getDefaultMessage()), this::mergeMessages));
-        return badRequest(fieldErrors);
+        return validationFailed(fieldErrors);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -69,73 +69,80 @@ public class GlobalExceptionHandler {
         Map<String, String> violations = new LinkedHashMap<>();
         ex.getConstraintViolations().forEach(violation -> violations.merge(
                 violation.getPropertyPath().toString(), safeMessage(violation.getMessage()), this::mergeMessages));
-        return badRequest(violations);
+        return validationFailed(violations);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        return badRequest(Map.of("request", "Request body is malformed or has an invalid value"));
+        return error(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", "Bad request",
+                Map.of("request", "Request body is malformed or has an invalid value"));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return badRequest(Map.of(ex.getName(), "must have a valid value"));
+        return invalidRequest(Map.of(ex.getName(), "must have a valid value"));
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleHandlerMethodValidation(HandlerMethodValidationException ex) {
-        return badRequest(Map.of("request", "Request parameters are invalid"));
+        return invalidRequest(Map.of("request", "Request parameters are invalid"));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
-        return badRequest(Map.of(ex.getParameterName(), "is required"));
+        return invalidRequest(Map.of(ex.getParameterName(), "is required"));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ApiError handleIllegalArgument(IllegalArgumentException ex) {
-        return badRequest(Map.of("request", "Request contains an invalid value"));
+        return invalidRequest(Map.of("request", "Request contains an invalid value"));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ApiError handleNoResourceFound(NoResourceFoundException ex) {
-        return error(HttpStatus.NOT_FOUND, "Not found", null);
+        return error(HttpStatus.NOT_FOUND, "NOT_FOUND", "Not found", null);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     ApiError handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return error(HttpStatus.METHOD_NOT_ALLOWED, "Method not allowed", null);
+        return error(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", "Method not allowed", null);
     }
 
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     @ResponseStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
     ApiError handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex) {
-        return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Unsupported media type", null);
+        return error(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", "Unsupported media type", null);
     }
 
     @ExceptionHandler({ DataIntegrityViolationException.class, ObjectOptimisticLockingFailureException.class })
     @ResponseStatus(HttpStatus.CONFLICT)
     ApiError handlePersistenceConflict(Exception ex) {
-        return error(HttpStatus.CONFLICT, "Conflict", null);
+        return error(HttpStatus.CONFLICT, "CONFLICT", "Conflict", null);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ApiError handleAuthentication(AuthenticationException ex) {
-        return error(HttpStatus.UNAUTHORIZED, "Unauthorized", null);
+        return error(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "Unauthorized", null);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     ApiError handleAccessDenied(AccessDeniedException ex) {
-        return error(HttpStatus.FORBIDDEN, "Forbidden", null);
+        return error(HttpStatus.FORBIDDEN, "FORBIDDEN", "Forbidden", null);
+    }
+
+    @ExceptionHandler(ApplicationException.class)
+    ResponseEntity<ApiError> handleApplicationException(ApplicationException ex) {
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(new ApiError(ex.getStatusCode().value(), ex.getCode(), ex.getReason(), null, now()));
     }
 
     @ExceptionHandler(ResponseStatusException.class)
@@ -145,7 +152,7 @@ public class GlobalExceptionHandler {
         String message = ex.getReason() != null
                 ? ex.getReason()
                 : knownStatus != null ? knownStatus.getReasonPhrase() : "Request failed";
-        return ResponseEntity.status(status).body(new ApiError(status.value(), message, null, now()));
+        return ResponseEntity.status(status).body(new ApiError(status.value(), "REQUEST_FAILED", message, null, now()));
     }
 
     @ExceptionHandler(Exception.class)
@@ -153,15 +160,19 @@ public class GlobalExceptionHandler {
     ApiError handleGenericException(Exception ex) {
         log.error("Unhandled request failure", ex);
         Map<String, String> details = properties.isExposeInternalErrorDetails() ? buildInternalErrors(ex) : null;
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", details);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Internal server error", details);
     }
 
-    private ApiError badRequest(Map<String, String> errors) {
-        return error(HttpStatus.BAD_REQUEST, "Bad request", errors);
+    private ApiError validationFailed(Map<String, String> errors) {
+        return error(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Bad request", errors);
     }
 
-    private ApiError error(HttpStatus status, String message, Map<String, String> errors) {
-        return new ApiError(status.value(), message, errors, now());
+    private ApiError invalidRequest(Map<String, String> errors) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Bad request", errors);
+    }
+
+    private ApiError error(HttpStatus status, String code, String message, Map<String, String> errors) {
+        return new ApiError(status.value(), code, message, errors, now());
     }
 
     private Instant now() {

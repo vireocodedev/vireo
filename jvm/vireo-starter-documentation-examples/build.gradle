@@ -6,4 +6,5 @@ dependencies {
     implementation project(':vireo-history')
     implementation project(':vireo-query')
     implementation project(':vireo-offline')
+    implementation 'org.springframework.security:spring-security-ldap'
 }

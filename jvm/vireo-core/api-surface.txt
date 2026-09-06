@@ -18,6 +18,47 @@ public abstract interface com.vireocode.vireo.base.BaseMapper<DOMAIN,DTO>
     public abstract DTO com.vireocode.vireo.base.BaseMapper.toDto(DOMAIN)
     public abstract void com.vireocode.vireo.base.BaseMapper.update(DTO,DOMAIN)
 
+public abstract interface com.vireocode.vireo.base.BaseRequestMapper<DOMAIN,CREATE,PATCH,RESPONSE>
+    public abstract DOMAIN com.vireocode.vireo.base.BaseRequestMapper.toDomain(CREATE)
+    public abstract RESPONSE com.vireocode.vireo.base.BaseRequestMapper.toResponse(DOMAIN)
+    public abstract void com.vireocode.vireo.base.BaseRequestMapper.patch(PATCH,DOMAIN)
+
+public abstract class com.vireocode.vireo.base.BaseRequestService<ID,DOMAIN extends com.vireocode.vireo.base.BaseEntity,CREATE,PATCH,RESPONSE>
+    public com.vireocode.vireo.base.BaseRequestService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseRequestMapper<DOMAIN, CREATE, PATCH, RESPONSE>)
+    public com.vireocode.vireo.base.BaseRequestService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseRequestMapper<DOMAIN, CREATE, PATCH, RESPONSE>,com.vireocode.vireo.base.EntityConfig)
+    public com.vireocode.vireo.base.BaseRequestService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseRequestMapper<DOMAIN, CREATE, PATCH, RESPONSE>,java.util.List<java.lang.String>)
+    public com.vireocode.vireo.base.BaseRequestService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseRequestMapper<DOMAIN, CREATE, PATCH, RESPONSE>,java.util.List<java.lang.String>,java.util.List<java.lang.String>)
+    protected final com.vireocode.vireo.base.BaseRequestMapper<DOMAIN, CREATE, PATCH, RESPONSE> com.vireocode.vireo.base.BaseRequestService.mapper
+    protected final com.vireocode.vireo.base.EntityConfig com.vireocode.vireo.base.BaseRequestService.entityConfig
+    protected final com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID> com.vireocode.vireo.base.BaseRequestService.repository
+    protected final java.lang.Class<DOMAIN> com.vireocode.vireo.base.BaseRequestService.domainType
+    protected final java.util.List<java.lang.String> com.vireocode.vireo.base.BaseRequestService.localSearchableFields
+    protected final java.util.List<java.lang.String> com.vireocode.vireo.base.BaseRequestService.relationSearchableFields
+    protected DOMAIN com.vireocode.vireo.base.BaseRequestService.buildCreateDomain(CREATE)
+    protected DOMAIN com.vireocode.vireo.base.BaseRequestService.findDeleteDomain(ID)
+    protected DOMAIN com.vireocode.vireo.base.BaseRequestService.findPatchDomain(ID)
+    protected RESPONSE com.vireocode.vireo.base.BaseRequestService.snapshotForHistory(DOMAIN)
+    protected boolean com.vireocode.vireo.base.BaseRequestService.isHidden(DOMAIN)
+    protected final RESPONSE com.vireocode.vireo.base.BaseRequestService.finalizeCreatedEntity(DOMAIN)
+    protected final RESPONSE com.vireocode.vireo.base.BaseRequestService.finalizePatchedEntity(DOMAIN,RESPONSE)
+    protected final void com.vireocode.vireo.base.BaseRequestService.finalizeDeletedEntity(DOMAIN,RESPONSE)
+    protected java.lang.String com.vireocode.vireo.base.BaseRequestService.extractId(DOMAIN)
+    protected org.springframework.data.jpa.domain.Specification<DOMAIN> com.vireocode.vireo.base.BaseRequestService.notDeletedSpecification()
+    protected void com.vireocode.vireo.base.BaseRequestService.applyCreateRelations(DOMAIN,CREATE)
+    protected void com.vireocode.vireo.base.BaseRequestService.applyPatchChanges(DOMAIN,PATCH)
+    protected void com.vireocode.vireo.base.BaseRequestService.applyPatchRelations(DOMAIN,PATCH)
+    protected void com.vireocode.vireo.base.BaseRequestService.performDelete(DOMAIN)
+    protected void com.vireocode.vireo.base.BaseRequestService.populateKeywords(DOMAIN)
+    protected void com.vireocode.vireo.base.BaseRequestService.validateCreateRequest(CREATE)
+    protected void com.vireocode.vireo.base.BaseRequestService.validateDeleteRequest(ID)
+    protected void com.vireocode.vireo.base.BaseRequestService.validatePatchRequest(ID,PATCH)
+    public RESPONSE com.vireocode.vireo.base.BaseRequestService.create(CREATE)
+    public RESPONSE com.vireocode.vireo.base.BaseRequestService.getById(ID)
+    public RESPONSE com.vireocode.vireo.base.BaseRequestService.patch(ID,PATCH)
+    public org.springframework.data.domain.Page<RESPONSE> com.vireocode.vireo.base.BaseRequestService.findAll(com.vireocode.vireo.web.SearchablePageable)
+    public org.springframework.data.domain.Page<RESPONSE> com.vireocode.vireo.base.BaseRequestService.findAll(com.vireocode.vireo.web.SearchablePageable,com.vireocode.vireo.spi.QueryFilterCriteria)
+    public void com.vireocode.vireo.base.BaseRequestService.delete(ID)
+
 public abstract class com.vireocode.vireo.base.BaseService<ID,DOMAIN extends com.vireocode.vireo.base.BaseEntity,DTO>
     public com.vireocode.vireo.base.BaseService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseMapper<DOMAIN, DTO>)
     public com.vireocode.vireo.base.BaseService(com.vireocode.vireo.base.SearchableRepository<DOMAIN, ID>,com.vireocode.vireo.base.BaseMapper<DOMAIN, DTO>,com.vireocode.vireo.base.EntityConfig)
@@ -176,14 +217,21 @@ public abstract interface com.vireocode.vireo.spi.QueryFilterCriteria
 
 public final record com.vireocode.vireo.web.ApiError
     extends java.lang.Record
+    public com.vireocode.vireo.web.ApiError(int,java.lang.String,java.lang.String,java.util.Map<java.lang.String, java.lang.String>,java.time.Instant)
     public com.vireocode.vireo.web.ApiError(int,java.lang.String,java.util.Map<java.lang.String, java.lang.String>,java.time.Instant)
     public final boolean com.vireocode.vireo.web.ApiError.equals(java.lang.Object)
     public final int com.vireocode.vireo.web.ApiError.hashCode()
     public final java.lang.String com.vireocode.vireo.web.ApiError.toString()
     public int com.vireocode.vireo.web.ApiError.status()
+    public java.lang.String com.vireocode.vireo.web.ApiError.code()
     public java.lang.String com.vireocode.vireo.web.ApiError.message()
     public java.time.Instant com.vireocode.vireo.web.ApiError.timestamp()
     public java.util.Map<java.lang.String, java.lang.String> com.vireocode.vireo.web.ApiError.errors()
+
+public class com.vireocode.vireo.web.ApplicationException
+    extends org.springframework.web.server.ResponseStatusException
+    public com.vireocode.vireo.web.ApplicationException(org.springframework.http.HttpStatusCode,java.lang.String,java.lang.String)
+    public java.lang.String com.vireocode.vireo.web.ApplicationException.getCode()
 
 public class com.vireocode.vireo.web.GlobalExceptionHandler
     public com.vireocode.vireo.web.GlobalExceptionHandler(com.vireocode.vireo.config.StarterCoreProperties,java.time.Clock)

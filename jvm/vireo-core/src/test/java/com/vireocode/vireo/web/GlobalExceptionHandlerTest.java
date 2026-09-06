@@ -50,6 +50,7 @@ class GlobalExceptionHandlerTest {
         ApiError error = handler(false).handleMethodArgumentTypeMismatch(exception);
 
         assertEquals(400, error.status());
+        assertEquals("INVALID_REQUEST", error.code());
         assertEquals("must have a valid value", error.errors().get("limit"));
         assertEquals(NOW, error.timestamp());
     }
@@ -67,6 +68,7 @@ class GlobalExceptionHandlerTest {
         ApiError error = handler(false).handleMethodArgumentNotValid(exception);
 
         assertEquals("must not be blank; must be shorter", error.errors().get("name"));
+        assertEquals("VALIDATION_FAILED", error.code());
         assertEquals("is invalid", error.errors().get("code"));
     }
 
@@ -94,6 +96,7 @@ class GlobalExceptionHandlerTest {
         ApiError error = handler(false).handleHttpMessageNotReadable(exception);
 
         assertEquals(400, error.status());
+        assertEquals("MALFORMED_REQUEST", error.code());
         assertEquals("Request body is malformed or has an invalid value", error.errors().get("request"));
     }
 
@@ -105,9 +108,11 @@ class GlobalExceptionHandlerTest {
         ApiError denied = handler(false).handleAccessDenied(new AccessDeniedException("x"));
 
         assertEquals(401, auth.status());
+        assertEquals("UNAUTHORIZED", auth.code());
         assertEquals("Unauthorized", auth.message());
         assertNull(auth.errors());
         assertEquals(403, denied.status());
+        assertEquals("FORBIDDEN", denied.code());
         assertEquals("Forbidden", denied.message());
         assertNull(denied.errors());
     }
@@ -140,6 +145,7 @@ class GlobalExceptionHandlerTest {
                 .handlePersistenceConflict(new ObjectOptimisticLockingFailureException("Widget", 7L));
 
         assertEquals(409, integrity.status());
+        assertEquals("CONFLICT", integrity.code());
         assertEquals("Conflict", integrity.message());
         assertNull(integrity.errors());
         assertEquals(409, optimistic.status());
@@ -156,8 +162,19 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(404, withReason.getStatusCode().value());
         assertEquals("missing", withReason.getBody().message());
+        assertEquals("REQUEST_FAILED", withReason.getBody().code());
         assertEquals(400, withoutReason.getStatusCode().value());
         assertEquals("Bad Request", withoutReason.getBody().message());
+    }
+
+    @Test
+    void applicationException_PreservesItsExplicitStableCodeAndSafeMessage() {
+        ResponseEntity<ApiError> response = handler(false).handleApplicationException(
+                new ApplicationException(HttpStatus.CONFLICT, "DUPLICATE_SLUG", "Slug is already in use"));
+
+        assertEquals(409, response.getStatusCode().value());
+        assertEquals("DUPLICATE_SLUG", response.getBody().code());
+        assertEquals("Slug is already in use", response.getBody().message());
     }
 
     @Test

@@ -62,6 +62,8 @@
     "generate:test": "corepack npm run projection:check && node --test scripts/generator/*.test.mjs",
     "projection:check": "node scripts/application-projection-policy.mjs && node --test scripts/application-projection-policy.test.mjs",
     "codex:check": "node scripts/codex-customization-policy.mjs",
+    "codex:test": "node --test --test-concurrency=1 scripts/codex-customization-policy.test.mjs scripts/codex-consumer-skills.test.mjs",
+    "codex:adopt": "node scripts/codex-consumer-skills.mjs",
     "generate:entity:fixture": "corepack npm run build && node scripts/generated-entity-fixture.mjs",
     "generate:frontend:fixture": "corepack npm run build && node scripts/generated-frontend-fixture.mjs",
     "upgrade:project:fixture": "corepack npm run build && node scripts/project-upgrade-fixture.mjs",

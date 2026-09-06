@@ -172,7 +172,7 @@
     "com.vireocode:vireo-core": {
       "audience": "application",
       "role": "server-foundation",
-      "declarationBudget": 31,
+      "declarationBudget": 34,
       "packageIntents": {
         "com.vireocode.vireo.base": "domain-base-and-mapping-api",
         "com.vireocode.vireo.config": "spring-auto-configuration-api",
@@ -186,7 +186,7 @@
     "com.vireocode:vireo-auth": {
       "audience": "application",
       "role": "default-authentication",
-      "declarationBudget": 13,
+      "declarationBudget": 14,
       "packageIntents": { "com.vireocode.vireo.auth": "authentication-http-and-configuration-api" }
     },
     "com.vireocode:vireo-query": {

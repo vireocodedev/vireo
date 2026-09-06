@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "repositories": [
+    { "alias": "framework", "path": "~/projects/vireo" },
+    { "alias": "template", "path": "~/projects/vireo-template" },
+    { "alias": "my-app", "path": "~/projects/my-app" }
+  ]
+}

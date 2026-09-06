@@ -6,6 +6,7 @@ import { join } from "node:path";
 import test from "node:test";
 import {
   checkGeneratedEntities,
+  createWireContract,
   ejectEntity,
   EntitySchemaError,
   generateEntity,
@@ -137,11 +138,87 @@ test("validates acronyms and explicit irregular plural names without inferring t
   assert.equal(parsed.entity.plural, "api-clients");
 });
 
-test("rejects reserved, Unicode, relationship, compound-id, and offline shapes explicitly in schema v1", () => {
+test("records the v2 full-stack Vireo ApiError wire contract", () => {
+  const contract = createWireContract(parseEntitySchema(schema()));
+
+  assert.equal(
+    contract.semantics.errors,
+    "Vireo ApiError { status, code, message, errors: field-message map or null, timestamp }; validation failures use code VALIDATION_FAILED",
+  );
+  assert.equal(
+    createWireContract(parseEntitySchema(schema()), "frontend").semantics.errors,
+    "The application adapter normalizes backend-specific failures into frontend errors",
+  );
+});
+
+test("keeps generated 0.3.0 wire contracts valid after correcting the error description", async () => {
+  const { root, schemaPath } = await projectFixture();
+  await generateEntity({ projectDirectory: root, schemaPath });
+
+  const manifestPath = join(root, ".vireo/generated/api-clients.json");
+  const contractPath = join(root, ".vireo/contracts/api-clients.contract.json");
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+  const contract = {
+    schemaVersion: 1,
+    entity: "APIClient",
+    id: { name: "id", type: "long", wireType: "integer" },
+    fields: schema().fields.map(field => ({
+      name: field.name,
+      type: field.type,
+      wireType:
+        field.type === "decimal"
+          ? "number"
+          : field.type === "integer" || field.type === "long"
+            ? "integer"
+            : field.type === "boolean"
+              ? "boolean"
+              : "string",
+      nullable: field.required !== true,
+      ...(field.enumValues ? { enumValues: field.enumValues } : {}),
+      ...(field.constraints ? { constraints: field.constraints } : {}),
+    })),
+    endpoints: {
+      search: { method: "POST", path: "/api/api-clients/search", response: "page" },
+      create: { method: "POST", path: "/api/api-clients" },
+      update: { method: "PUT", path: "/api/api-clients/{id}" },
+      delete: { method: "DELETE", path: "/api/api-clients/{id}" },
+    },
+    semantics: {
+      date: "ISO-8601 calendar date",
+      decimal: "JSON number; BigDecimal is canonical on the server",
+      errors: "Spring ProblemDetail with field violations when validation fails",
+      nullability: "optional fields are explicit JSON null; unknown response fields are stripped by Zod",
+      timestamp: "ISO-8601 UTC or offset timestamp",
+    },
+  };
+  const previousContract = stableJson(contract);
+  manifest.generatorVersion = "0.3.0";
+  manifest.contractDigest = sha256(previousContract);
+  manifest.files.find(file => file.path === ".vireo/contracts/api-clients.contract.json").sha256 =
+    sha256(previousContract);
+  await writeFile(contractPath, previousContract);
+  await writeFile(manifestPath, stableJson(manifest));
+
+  const [result] = await checkGeneratedEntities(root);
+  assert.equal(result.ok, true, result.problems.join("\n"));
+
+  contract.semantics.errors =
+    "Vireo ApiError { status, message, errors: field-message map or null, timestamp }; validation failures key errors by field";
+  const correctedContract = stableJson(contract);
+  manifest.generatorVersion = "0.3.1";
+  manifest.contractDigest = sha256(correctedContract);
+  manifest.files.find(file => file.path === ".vireo/contracts/api-clients.contract.json").sha256 =
+    sha256(correctedContract);
+  await writeFile(contractPath, correctedContract);
+  await writeFile(manifestPath, stableJson(manifest));
+  const [corrected] = await checkGeneratedEntities(root);
+  assert.equal(corrected.ok, true, corrected.problems.join("\n"));
+});
+
+test("rejects reserved, Unicode, compound-id, and offline shapes explicitly in schema v1", () => {
   for (const value of [
     schema({ entity: { name: "Član", plural: "clanovi" } }),
     schema({ fields: [{ name: "class", type: "string", required: true, query: { searchable: true } }] }),
-    schema({ relationships: [{ name: "owner", kind: "many-to-one", target: "User", displayField: "name" }] }),
     schema({ capabilities: { history: true, offline: true, query: true } }),
     { ...schema(), id: { fields: ["tenantId", "number"] } },
   ]) {
@@ -179,6 +256,25 @@ test("rejects reserved, colliding, and oversized derived SQL identifiers", () =>
       ),
     /name-derived index exceeds the portable 63-character/u,
   );
+});
+
+test("rejects relationship response and SQL-column collisions before target resolution", () => {
+  const scalarCollision = schema({
+    fields: [
+      { name: "customerName", type: "string", required: true, query: { searchable: true } },
+      { name: "customerId", type: "long" },
+    ],
+    relationships: [{ name: "customer", kind: "many-to-one", target: "Customer", displayField: "legalName" }],
+  });
+  assert.throws(() => parseEntitySchema(scalarCollision), /conflicts with a field/u);
+
+  const relationCollision = schema({
+    relationships: [
+      { name: "apiClient", kind: "many-to-one", target: "Customer", displayField: "legalName" },
+      { name: "apiCLIENT", kind: "many-to-one", target: "Customer", displayField: "legalName" },
+    ],
+  });
+  assert.throws(() => parseEntitySchema(relationCollision), /lower_snake_case SQL conversion/u);
 });
 
 test("rejects nested field values that disagree with their declared type", () => {
@@ -324,6 +420,9 @@ test("generated pages import only controls used by the schema", async () => {
 
   await generateEntity({ projectDirectory: root, schemaPath });
   const page = await readFile(join(root, "frontend/src/generated/api-clients/pages/AppPageApiClients.tsx"), "utf8");
+  assert.match(page, /import \{ sigAppPreferences \} from "@\/app\/ui\/preferences\/signals\/sigAppPreferences"/u);
+  assert.match(page, /const preferences = sigAppPreferences\.value/u);
+  assert.doesNotMatch(page, /useAppPreferences/u);
   assert.doesNotMatch(page, /\bCheckbox\b/u);
   assert.doesNotMatch(page, /\bFormControlLabel\b/u);
   assert.doesNotMatch(page, /\bMenuItem\b/u);
@@ -355,6 +454,182 @@ test("generated fixtures respect declared string length constraints", async () =
   );
   assert.match(frontendTest, /countryCode: "XX"/u);
   assert.doesNotMatch(frontendTest, /EXAMPLE/u);
+});
+
+test("generated create schemas match Java optionality and nonblank string validation", async () => {
+  const { root, schemaPath } = await projectFixture();
+  await generateEntity({ projectDirectory: root, schemaPath });
+
+  const model = await readFile(join(root, "frontend/src/generated/api-clients/models/APIClient.ts"), "utf8");
+  const createSchema = model.match(/CreateRequestSchema = z\.object\(\{([\s\S]*?)\n\}\);/u)?.[1] ?? "";
+  assert.match(
+    createSchema,
+    /displayName:\s+z[\s\S]*?\.string\(\)[\s\S]*?\.min\(2\)[\s\S]*?\.max\(120\)[\s\S]*?\.refine\(\(value\) => value\.trim\(\)\.length > 0\),/u,
+  );
+  assert.match(createSchema, /reviewedAt: z\.iso\.datetime\(\{ offset: true \}\)\.nullable\(\)\.optional\(\),/u);
+});
+
+test("generates target-first many-to-one create, patch, response, and query contracts", async () => {
+  const { root } = await projectFixture();
+  const customerPath = join(root, "customer.entity.json");
+  const purchaseOrderPath = join(root, "purchase-order.entity.json");
+  const [customerFixture, purchaseOrderFixture] = await Promise.all([
+    readFile(new URL("../fixtures/customer.entity.json", import.meta.url), "utf8"),
+    readFile(new URL("../fixtures/purchase-order.relationship.entity.json", import.meta.url), "utf8"),
+  ]);
+  await writeFile(customerPath, customerFixture);
+  await generateEntity({ projectDirectory: root, schemaPath: customerPath });
+  await writeFile(purchaseOrderPath, purchaseOrderFixture);
+  await generateEntity({ projectDirectory: root, schemaPath: purchaseOrderPath });
+
+  const javaRoot = join(root, "src/main/java/dev/example/fixture/app/purchaseorder");
+  const entity = await readFile(join(javaRoot, "PurchaseOrder.java"), "utf8");
+  const create = await readFile(join(javaRoot, "PurchaseOrderCreateRequest.java"), "utf8");
+  const patch = await readFile(join(javaRoot, "PurchaseOrderPatchRequest.java"), "utf8");
+  const mapper = await readFile(join(javaRoot, "PurchaseOrderMapper.java"), "utf8");
+  const service = await readFile(join(javaRoot, "PurchaseOrderService.java"), "utf8");
+  const response = await readFile(join(javaRoot, "PurchaseOrderResponse.java"), "utf8");
+  const controller = await readFile(join(javaRoot, "PurchaseOrderController.java"), "utf8");
+  const model = await readFile(join(root, "frontend/src/generated/purchase-orders/models/PurchaseOrder.ts"), "utf8");
+  const api = await readFile(join(root, "frontend/src/generated/purchase-orders/api/purchaseOrder.api.ts"), "utf8");
+  const migration = await readFile(join(root, "src/main/resources/db/migration/V4__create_purchase_order.sql"), "utf8");
+  const backendTest = await readFile(
+    join(root, "src/test/java/dev/example/fixture/app/purchaseorder/PurchaseOrderApiIntegrationTest.java"),
+    "utf8",
+  );
+  const contract = JSON.parse(await readFile(join(root, ".vireo/contracts/purchase-orders.contract.json"), "utf8"));
+
+  assert.match(entity, /@ManyToOne\(fetch = FetchType\.LAZY\)/u);
+  assert.match(entity, /relationSelectionLabelFields = \{ "legalName" \}/u);
+  assert.match(create, /@NotNull Long customerId/u);
+  assert.match(patch, /JsonNullable<@NotNull Long> customerId/u);
+  assert.match(mapper, /@BeanMapping\(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy\.IGNORE\)/u);
+  assert.match(service, /customerRepository\.findById\(id\)[\s\S]*\.filter\(target -> !target\.isDeleted\(\)\)/u);
+  assert.doesNotMatch(service, /customerRepository\.findByIdAndDeletedFalse/u);
+  assert.match(response, /Long customerId[\s\S]*String customerName/u);
+  assert.match(controller, /@PatchMapping\("\/\{id\}"\)/u);
+  assert.match(controller, /@Valid @RequestBody PurchaseOrderPatchRequest/u);
+  assert.match(model, /export type PurchaseOrderCreateRequest/u);
+  assert.match(model, /export type PurchaseOrderPatchRequest/u);
+  assert.match(api, /httpPatch/u);
+  assert.match(api, /PurchaseOrderPatchRequestSchema\.parse/u);
+  assert.match(migration, /customer_id BIGINT NOT NULL REFERENCES customer\(id\)/u);
+  assert.match(backendTest, /seedRelationTargets/u);
+  assert.match(backendTest, /customerRepository\.saveAndFlush/u);
+  assert.match(backendTest, /\.formatted\(customerId\)/u);
+  assert.equal(contract.schemaVersion, 2);
+  assert.deepEqual(contract.relationships[0].responseDisplay, {
+    name: "customerName",
+    source: "Customer.legalName",
+    wireType: "string",
+    nullable: false,
+  });
+});
+
+test("generated create schemas allow omitted optional relationship IDs", async () => {
+  const { root } = await projectFixture();
+  const customerPath = join(root, "customer.entity.json");
+  const purchaseOrderPath = join(root, "purchase-order.entity.json");
+  await writeFile(customerPath, await readFile(new URL("../fixtures/customer.entity.json", import.meta.url), "utf8"));
+  await generateEntity({ projectDirectory: root, schemaPath: customerPath });
+  const purchaseOrder = JSON.parse(
+    await readFile(new URL("../fixtures/purchase-order.relationship.entity.json", import.meta.url), "utf8"),
+  );
+  purchaseOrder.relationships[0].required = false;
+  await writeFile(purchaseOrderPath, JSON.stringify(purchaseOrder));
+  await generateEntity({ projectDirectory: root, schemaPath: purchaseOrderPath });
+
+  const model = await readFile(join(root, "frontend/src/generated/purchase-orders/models/PurchaseOrder.ts"), "utf8");
+  const createSchema = model.match(/CreateRequestSchema = z\.object\(\{([\s\S]*?)\n\}\);/u)?.[1] ?? "";
+  assert.match(createSchema, /customerId: z\.number\(\)\.int\(\)\.positive\(\)\.nullable\(\)\.optional\(\),/u);
+});
+
+test("fails closed for unsupported relationship targets and ordering", async () => {
+  const frontend = await frontendProjectFixture();
+  const frontendSchema = schema({
+    relationships: [{ name: "customer", kind: "many-to-one", target: "Customer", displayField: "legalName" }],
+  });
+  await writeFile(frontend.schemaPath, JSON.stringify(frontendSchema));
+  await assert.rejects(
+    generateEntity({ projectDirectory: frontend.root, schemaPath: frontend.schemaPath }),
+    /managed full-stack target/u,
+  );
+
+  const self = await projectFixture();
+  const selfSchema = schema({
+    relationships: [{ name: "owner", kind: "many-to-one", target: "APIClient", displayField: "displayName" }],
+  });
+  await writeFile(self.schemaPath, JSON.stringify(selfSchema));
+  await assert.rejects(generateEntity({ projectDirectory: self.root, schemaPath: self.schemaPath }), /own entity/u);
+
+  const { root } = await projectFixture();
+  const customerPath = join(root, "customer.entity.json");
+  const sourcePath = join(root, "source.entity.json");
+  await writeFile(customerPath, await readFile(new URL("../fixtures/customer.entity.json", import.meta.url), "utf8"));
+  await generateEntity({ projectDirectory: root, schemaPath: customerPath });
+  const invalidDisplay = JSON.parse(
+    await readFile(new URL("../fixtures/purchase-order.relationship.entity.json", import.meta.url), "utf8"),
+  );
+  invalidDisplay.relationships[0].displayField = "missing";
+  await writeFile(sourcePath, JSON.stringify(invalidDisplay));
+  await assert.rejects(generateEntity({ projectDirectory: root, schemaPath: sourcePath }), /string or text field/u);
+  invalidDisplay.relationships[0].displayField = "legalName";
+  invalidDisplay.database.migrationVersion = 3;
+  await writeFile(sourcePath, JSON.stringify(invalidDisplay));
+  await assert.rejects(generateEntity({ projectDirectory: root, schemaPath: sourcePath }), /greater than target/u);
+
+  invalidDisplay.database.migrationVersion = 4;
+  await writeFile(sourcePath, JSON.stringify(invalidDisplay));
+  const customerEntity = join(root, "src/main/java/dev/example/fixture/app/customer/Customer.java");
+  await writeFile(customerEntity, `${await readFile(customerEntity, "utf8")}\n// customized\n`);
+  await assert.rejects(generateEntity({ projectDirectory: root, schemaPath: sourcePath }), /stale or customized/u);
+
+  const ambiguous = await projectFixture();
+  await writeFile(
+    customerPath.replace(root, ambiguous.root),
+    await readFile(new URL("../fixtures/customer.entity.json", import.meta.url), "utf8"),
+  );
+  await generateEntity({ projectDirectory: ambiguous.root, schemaPath: customerPath.replace(root, ambiguous.root) });
+  const customerManifest = await readFile(join(ambiguous.root, ".vireo/generated/customers.json"), "utf8");
+  await writeFile(join(ambiguous.root, ".vireo/generated/customer-alias.json"), customerManifest);
+  await writeFile(
+    sourcePath.replace(root, ambiguous.root),
+    JSON.stringify({ ...invalidDisplay, database: { ...invalidDisplay.database, migrationVersion: 4 } }),
+  );
+  await assert.rejects(
+    generateEntity({ projectDirectory: ambiguous.root, schemaPath: sourcePath.replace(root, ambiguous.root) }),
+    /exactly one previously generated/u,
+  );
+});
+
+test("relationship generation rejects frozen 0.2 targets that use the legacy schema grammar", async () => {
+  const legacy = await legacyGeneratorFixture();
+  const sourcePath = join(legacy.root, "purchase-order.entity.json");
+  await writeFile(
+    sourcePath,
+    JSON.stringify(
+      schema({
+        entity: { name: "PurchaseOrder", plural: "purchase-orders" },
+        database: { table: "purchase_order", migrationVersion: 4 },
+        api: { path: "/api/purchase-orders" },
+        fields: [{ name: "number", type: "string", required: true, query: { searchable: true } }],
+        relationships: [
+          {
+            name: "customer",
+            kind: "many-to-one",
+            target: "APIClient",
+            required: false,
+            displayField: "displayName",
+          },
+        ],
+      }),
+    ),
+  );
+
+  await assert.rejects(
+    generateEntity({ projectDirectory: legacy.root, schemaPath: sourcePath }),
+    /unsupported generator version "0\.2\.0"/u,
+  );
 });
 
 test("generated full-stack and frontend stories use deterministic in-memory adapters", async () => {

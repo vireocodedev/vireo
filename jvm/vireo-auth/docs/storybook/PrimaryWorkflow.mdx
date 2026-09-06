@@ -9,7 +9,7 @@ The default dependency secures `/api/**`. Add application-specific public or res
 
 ## Why it exists
 
-Copying the complete starter security chain to add one route forfeits future security fixes. `StarterHttpSecurityCustomizer` keeps the application-owned rule explicit while retaining Vireo's session, CSRF, error, and endpoint defaults. Replace `SecurityFilterChain` instead when the authentication mechanism genuinely differs.
+Copying the complete starter security chain to add one route forfeits future security fixes. `StarterHttpSecurityCustomizer` keeps the application-owned rule explicit while retaining Vireo's session, CSRF, error, and endpoint defaults. If an application must add a narrower `SecurityFilterChain`, its browser chain can delegate to `StarterSessionSecurity` instead of copying that policy.
 
 The exact source below is compiled by `vireo-starter-documentation-examples` during the JVM build.
 
