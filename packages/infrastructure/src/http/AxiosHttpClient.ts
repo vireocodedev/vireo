@@ -67,6 +67,13 @@ export abstract class AxiosHttpClient {
     };
   }
 
+  protected httpPatch<TSchema extends z.ZodTypeAny = z.ZodUnknown>(schema?: TSchema) {
+    return async (url: string, data?: unknown, config?: AxiosRequestConfig): Promise<z.infer<TSchema>> => {
+      const responseData = await this.doPatch(url, data, config);
+      return parseHttpResponse(schema ?? z.unknown(), responseData) as z.infer<TSchema>;
+    };
+  }
+
   protected httpDelete<TSchema extends z.ZodTypeAny = z.ZodUnknown>(schema?: TSchema) {
     return async (url: string, config?: AxiosRequestConfig): Promise<z.infer<TSchema>> => {
       const responseData = await this.doDelete(url, config);
@@ -101,6 +108,11 @@ export abstract class AxiosHttpClient {
 
   private async doPut<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.put<T>(this.resolveEndpoint(this.base, url), data, config);
+    return response.data;
+  }
+
+  private async doPatch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    const response = await this.client.patch<T>(this.resolveEndpoint(this.base, url), data, config);
     return response.data;
   }
 

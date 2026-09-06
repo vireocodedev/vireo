@@ -116,6 +116,7 @@ const EXPECTED_JVM_AUTH_ROUTES = [
   "JVM/Auth/Overview",
   "JVM/Auth/Primary Workflow",
   "JVM/Auth/Configuration and Security",
+  "JVM/Auth/External Identity and API Keys",
 ] as const;
 
 const EXPECTED_JVM_ROUTES = ["JVM/Overview"] as const;

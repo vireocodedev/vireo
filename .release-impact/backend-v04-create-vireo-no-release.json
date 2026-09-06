@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "artifact": "npm:create-vireo",
+  "decision": "no-release",
+  "justification": "create-vireo publishes exclusively through immutable Template/CLI adoption and cannot be mixed with this JVM/classic-library release. The relationship-aware entity generator and consumer-skill projection changes remain pending for the next coordinated Template/CLI release; this PR intentionally leaves create-vireo@0.8.7 unchanged."
+}

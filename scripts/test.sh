@@ -9,6 +9,7 @@ node --test \
   scripts/finalize-jvm-release.test.mjs \
   scripts/finalize-npm-releases.test.mjs \
   scripts/codex-customization-policy.test.mjs \
+  scripts/codex-consumer-skills.test.mjs \
   scripts/documentation-ownership-policy.test.mjs \
   scripts/npm-registry-retry.test.mjs \
   scripts/npm-release-maven-prerequisite-policy.test.mjs \

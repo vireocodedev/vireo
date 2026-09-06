@@ -57,6 +57,43 @@ class BaseServiceTest {
     }
 
     @Test
+    void constructor_RejectsCrudOverrideDeclaredOnAnIntermediateSuperclass() {
+        IllegalStateException exception = assertThrows(IllegalStateException.class,
+                () -> new InheritedCrudOverrideService(mockRepository(), mockMapper(), defaultConfig()));
+
+        assertTrue(exception.getMessage().contains("Do not override BaseService CRUD entry points"));
+    }
+
+    @Test
+    void findAll_UsesAnOverriddenNotDeletedSpecification() {
+        SearchableRepository<TestEntity, Long> repository = mockRepository();
+        BaseMapper<TestEntity, TestDto> mapper = mockMapper();
+        ScopedService service = new ScopedService(repository, mapper, defaultConfig());
+        when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
+
+        service.findAll(new SearchablePageable(PageRequest.of(0, 10), null));
+
+        assertTrue(service.notDeletedSpecificationCalled);
+    }
+
+    @Test
+    void create_UsesAnOverriddenExtractIdForHistory() {
+        SearchableRepository<TestEntity, Long> repository = mockRepository();
+        BaseMapper<TestEntity, TestDto> mapper = mockMapper();
+        CustomIdService service = new CustomIdService(repository, mapper, historyConfig());
+        service.historyRecorder = mock(HistoryEventsRecorder.class);
+        TestEntity saved = entity(10L, "new", false);
+        TestDto response = new TestDto("new");
+        when(mapper.toDomain(any())).thenReturn(saved);
+        when(repository.saveAndFlush(saved)).thenReturn(saved);
+        when(mapper.toDto(saved)).thenReturn(response);
+
+        service.create(new TestDto("new"));
+
+        verify(service.historyRecorder).recordCreate(TestHistoryEntityType.ITEM, "external-10", response);
+    }
+
+    @Test
     void getById_ThrowsWhenEntityIsHiddenBySoftDelete() {
         SearchableRepository<TestEntity, Long> repository = mockRepository();
         BaseMapper<TestEntity, TestDto> mapper = mockMapper();
@@ -534,6 +571,52 @@ class BaseServiceTest {
         @Override
         public TestDto create(TestDto dto) {
             return dto;
+        }
+    }
+
+    static class IntermediateCrudOverrideService extends TestBaseService {
+        IntermediateCrudOverrideService(SearchableRepository<TestEntity, Long> repository,
+                BaseMapper<TestEntity, TestDto> mapper, EntityConfig entityConfig) {
+            super(repository, mapper, entityConfig);
+        }
+
+        @Override
+        public TestDto create(TestDto dto) {
+            return dto;
+        }
+    }
+
+    static class InheritedCrudOverrideService extends IntermediateCrudOverrideService {
+        InheritedCrudOverrideService(SearchableRepository<TestEntity, Long> repository,
+                BaseMapper<TestEntity, TestDto> mapper, EntityConfig entityConfig) {
+            super(repository, mapper, entityConfig);
+        }
+    }
+
+    static class ScopedService extends TestBaseService {
+        boolean notDeletedSpecificationCalled;
+
+        ScopedService(SearchableRepository<TestEntity, Long> repository, BaseMapper<TestEntity, TestDto> mapper,
+                EntityConfig entityConfig) {
+            super(repository, mapper, entityConfig);
+        }
+
+        @Override
+        protected Specification<TestEntity> notDeletedSpecification() {
+            notDeletedSpecificationCalled = true;
+            return super.notDeletedSpecification();
+        }
+    }
+
+    static class CustomIdService extends TestBaseService {
+        CustomIdService(SearchableRepository<TestEntity, Long> repository, BaseMapper<TestEntity, TestDto> mapper,
+                EntityConfig entityConfig) {
+            super(repository, mapper, entityConfig);
+        }
+
+        @Override
+        protected String extractId(TestEntity domain) {
+            return "external-" + domain.getId();
         }
     }
 

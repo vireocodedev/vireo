@@ -25,7 +25,7 @@ Auth, History, Query Engine, and Offline already depend on Core. Install it dire
 
 Core owns:
 
-- `BaseEntity`, `BaseMapper`, `SearchableRepository`, `EntityConfig`, and `BaseService` lifecycle mechanics;
+- `BaseEntity`, `BaseMapper`, `BaseRequestMapper`, `SearchableRepository`, `EntityConfig`, and service lifecycle mechanics;
 - stable `ApiError` responses and request utilities;
 - JPA auditing and method-security enablement required by Starter contracts;
 - module-isolated Flyway orchestration;
@@ -57,6 +57,8 @@ Known routing, input, and persistence failures preserve safe client semantics: m
 - History-enabled entities fail before persistence when no history recorder exists.
 - Filter payloads fail explicitly when Query Engine is absent.
 - Public CRUD entry points cannot be overridden; protected template hooks preserve the lifecycle.
+- New endpoints use `BaseRequestService<ID, DOMAIN, CREATE, PATCH, RESPONSE>`: `CREATE` and `PATCH` only contain writable fields, while `RESPONSE` owns read-only and relation display fields.
+- Error bodies include stable uppercase-snake-case codes. Throw `ApplicationException` only with a deliberately safe client message.
 - Public pagination is bounded to page 10,000, 200 rows per page, and 256 search characters; `rowsPerPage=-1` is rejected rather than expanded into an unbounded query.
 - Anonymous Spring Security authentication is never treated as an application principal.
 

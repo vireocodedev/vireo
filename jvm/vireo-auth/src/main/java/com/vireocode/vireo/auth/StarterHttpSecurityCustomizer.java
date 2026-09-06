@@ -7,11 +7,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
  * it.
  *
  * <p>
- * Replacing the whole {@code SecurityFilterChain} is always available and is
- * the
- * right move when the authentication model genuinely differs. It is the wrong
- * move when all that is wanted is one more public path, and forcing that choice
- * is how library security configuration ends up copy-pasted and then drifting.
+ * Replacing the whole {@code SecurityFilterChain} is always available and is the
+ * right move when the authentication model genuinely differs. An application
+ * that adds a narrower chain can delegate its browser chain to
+ * {@link StarterSessionSecurity}; it does not need to copy the session policy.
+ * This customizer remains the smaller option when all that is wanted is one more
+ * public path.
  * Every customizer bean is applied to the default chain in
  * {@code @Order} sequence before the library's authenticated API matcher and
  * permissive final fallback. This lets an application publish a narrower API

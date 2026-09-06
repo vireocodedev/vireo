@@ -1,9 +1,14 @@
 ---
 name: starter-ui-component-author
-description: Use for first-class public Vireo React components in @vireocodedev/ui; not application-specific compositions, internal helpers, or ordinary UI edits.
+description: "Use for first-class public Vireo React components in @vireocodedev/ui; not application-specific compositions, internal helpers, or ordinary UI edits."
 ---
 
 # Starter UI Component Author
+
+Complete the [shared entry](../vireo-framework/references/workflow.md#entry),
+including on direct invocation. The selected mode controls this checklist:
+plan/review is read-only; implementation permits scoped generation/edits and
+focused checks, not an automatic full verification sweep.
 
 Build a finished, publishable Vireo component—not merely a compiling scaffold. Work from the Starter repository root and preserve the user's requested behavior, compatibility, and scope.
 
@@ -35,7 +40,9 @@ Use the repository generator for a new first-class component. Do not hand-create
 
 1. Choose an unprefixed PascalCase input such as `StatusBadge`; the generator adds `Vireo`.
 2. Choose an existing public owner and an approved component category. Choose the loading category and geometry from the loading-state contract; `static` must use `none`.
-3. Inspect destinations before writing:
+3. Discover the generator entry/flags from current scripts and the generator guide,
+   then inspect destinations before writing. This is an example, not a command to
+   run in read-only mode:
 
 ```bash
 npm run generate -- react-component StatusBadge \
@@ -71,21 +78,22 @@ Generation establishes structure only. Before treating the component as complete
 
 ## Validation
 
-Run focused checks first and broaden them in proportion to the change. For a new public component, the expected final gate is:
+Use vertical slices: a focused observable component test, minimal behavior, then
+refactor while green. Discover the exact commands from the current root/UI package
+scripts and scoped guides. Relevant evidence includes component tests, package
+types/tests/build, Storybook interaction/accessibility/build, strict consumer
+types, public surface, lint/format, and diff hygiene. These are completion criteria,
+not permission to run every gate immediately: coordinate broad package,
+Storybook/browser, and repository checks sequentially under the shared policy.
 
-```bash
-npm exec --workspace @vireocodedev/ui vitest run <path-to-component-test>
-npm run typecheck --workspace @vireocodedev/ui
-npm run test --workspace @vireocodedev/ui
-npm run build --workspace @vireocodedev/ui
-npm run build-storybook --workspace @vireocodedev/ui
-npm run types:strict
-npm run surface
-npm run lint
-npm run format:check
-git diff --check
-```
-
-If `npm run surface` differs only because of an intentional public export, run `npm run surface:update`, inspect the snapshot diff, and rerun `npm run surface`. Run `npm run generate:test` when changing the generator or its templates, not for an ordinary generated component.
+Only refresh a public-surface snapshot during authorized implementation when the
+export change is intentional; inspect its diff and rerun the corresponding check.
+Generator/template changes need generator tests; an ordinary generated component
+does not automatically require a generator-wide run. Plan/review records missing
+evidence without running checks or refreshing snapshots.
 
 Do not report the component complete while generated placeholders remain, required public-surface changes are unexplained, or relevant checks are failing. Distinguish pre-existing failures and routine Storybook dependency/chunk warnings from regressions introduced by the component.
+
+Complete the [shared exit](../vireo-framework/references/workflow.md#exit), including
+the public anatomy, accessibility/loading/story coverage, release impact, actual
+focused results, and coordinated gates still outstanding.

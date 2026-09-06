@@ -1,7 +1,9 @@
 # Offline guarantees and limits
 
-Status: public `0.x` contract for Vireo's offline primitives. The Starter Template
-does not enable offline CRUD for its Item or generated capabilities.
+Status: public `0.x` contract for Vireo's offline primitives. The current Starter
+Template contains one application-owned reference capability: offline Item CRUD and
+replay. Generated capabilities remain online-only. This current working-Template
+state does not rewrite the pinned `0.8.7` Template history, which was shell-only.
 
 ## What “offline-capable” means
 
@@ -32,8 +34,9 @@ calls the application's order command.
 Treat this as a starting contract, not a generated feature: deliberately admit the
 specific command, connect capture to durable SQLite storage, keep server-side
 idempotency and authorization, and implement conflict/recovery UI before exposing
-it. The Template remains an offline shell and does not enable this route or any
-offline CRUD by default.
+it. The current Template applies this pattern to its application-owned Item feature;
+it remains a reference capability, not generated output. Schema v1 still refuses
+`capabilities.offline: true`, so generated CRUD is online-only.
 
 ## Primitive guarantees
 

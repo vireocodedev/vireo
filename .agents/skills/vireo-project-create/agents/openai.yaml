@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vireo Project Create"
+  short_description: "Create a scoped app from an exact published CLI"
+  default_prompt: "Use $vireo-project-create to preview and create a new Vireo app with an exact supported published CLI and profile-appropriate checks."

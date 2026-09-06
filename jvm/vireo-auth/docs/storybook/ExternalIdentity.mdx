@@ -1,0 +1,14 @@
+import { Meta, Source } from "@storybook/addon-docs/blocks";
+import configurationSource from "../../../vireo-starter-documentation-examples/src/main/java/com/vireocode/docs/auth/ExternalIdentitySecurityConfigurationExample.java?raw";
+
+<Meta title="JVM/Auth/External Identity and API Keys" />
+
+# External identity and API keys
+
+Replace the default database `UserDetailsService` when LDAP or another identity provider owns users. Defining even one `SecurityFilterChain` makes Vireo's default chain back off, so the example explicitly declares both its browser-session chain and its external chain. Its browser chain delegates to `StarterSessionSecurity` instead of copying Vireo's session policy.
+
+Use a separate, explicitly ordered stateless chain only for an external API surface. Its matcher must be narrower than the browser API, and the application owns API-key lookup, rotation, tenancy, authorities, and error policy. Store only hashes, compare in constant time, enforce expiry and revocation, and reveal plaintext keys only once at issuance.
+
+The exact source below is compiled by `vireo-starter-documentation-examples` during the JVM build. It contains no LDAP server settings, API keys, or domain routes.
+
+<Source language="java" code={configurationSource} />

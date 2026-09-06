@@ -29,7 +29,7 @@ Generate options:
   --accept-overwrite           With --force, explicitly overwrite collisions/customizations
   --json                       Print machine-readable output
 
-Check verifies canonical schema, derived wire contract, migration, backend DTO/controller,
+Check verifies canonical schema, derived wire contract, migration, backend request/response/controller,
 and frontend transport/API hashes. Eject retains application code while removing Vireo
 management and generated route registration.
 

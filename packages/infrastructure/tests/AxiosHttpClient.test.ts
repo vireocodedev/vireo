@@ -7,6 +7,7 @@ function createClient() {
   const transport = {
     delete: vi.fn(),
     get: vi.fn(),
+    patch: vi.fn(),
     post: vi.fn(),
     put: vi.fn(),
   } as unknown as AxiosInstance;
@@ -21,6 +22,7 @@ function createClient() {
     getBlob = this.httpGetBlob();
     postWidget = this.httpPost(z.object({ id: z.number() }));
     putWidget = this.httpPut(z.object({ id: z.number() }));
+    patchWidget = this.httpPatch(z.object({ id: z.number() }));
     deleteWidget = this.httpDelete(z.object({ deleted: z.boolean() }));
   }
 
@@ -33,14 +35,17 @@ describe("AxiosHttpClient", () => {
     vi.mocked(transport.get).mockResolvedValueOnce({ data: { id: 1 } });
     vi.mocked(transport.post).mockResolvedValueOnce({ data: { id: 2 } });
     vi.mocked(transport.put).mockResolvedValueOnce({ data: { id: 3 } });
+    vi.mocked(transport.patch).mockResolvedValueOnce({ data: { id: 4 } });
     vi.mocked(transport.delete).mockResolvedValueOnce({ data: { deleted: true } });
 
     await expect(client.getWidget("1", { timeout: 500 })).resolves.toEqual({ id: 1 });
     await expect(client.postWidget("", { name: "new" })).resolves.toEqual({ id: 2 });
     await expect(client.putWidget("3", { name: "updated" })).resolves.toEqual({ id: 3 });
+    await expect(client.patchWidget("3", { name: "patched" })).resolves.toEqual({ id: 4 });
     await expect(client.deleteWidget("3")).resolves.toEqual({ deleted: true });
     expect(transport.get).toHaveBeenCalledWith("/widgets/1", { timeout: 500 });
     expect(transport.post).toHaveBeenCalledWith("/widgets", { name: "new" }, undefined);
+    expect(transport.patch).toHaveBeenCalledWith("/widgets/3", { name: "patched" }, undefined);
   });
 
   it("merges pageable parameters, handles blobs, and rejects invalid payloads", async () => {

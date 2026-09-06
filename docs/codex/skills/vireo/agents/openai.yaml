@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vireo workflow"
+  short_description: "Route Vireo work through repository safeguards"
+  default_prompt: "Use $vireo to complete this Vireo task through the appropriate repository workflow."

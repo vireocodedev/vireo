@@ -38,6 +38,29 @@ Maven:
 
 The dependency alone installs the defaults. A consumer can add narrower authorization rules through `StarterHttpSecurityCustomizer`, or replace `SecurityFilterChain`, `UserDetailsService`, `PasswordEncoder`, `AuthenticationManager`, `SessionAuthenticationStrategy`, or `Clock` with ordinary beans.
 
+If an application declares a narrower `SecurityFilterChain`, Vireo's default
+chain backs off. Inject `StarterSessionSecurity` and call `build(http)` from the
+application's browser chain to retain the standard session, CSRF, JSON-error,
+endpoint, documentation, and customizer policy without copying it. Build that
+catch-all browser chain once and order every narrowly matched chain before it.
+
+## External identity and secondary API chains
+
+The database user model is optional. A standard Spring Security LDAP
+`UserDetailsService` and `AuthenticationManager` can replace it. Declaring any
+`SecurityFilterChain` makes Vireo's default chain back off, so an application
+that adds stateless API-key authentication must also declare an explicit browser
+session chain. That chain can delegate to `StarterSessionSecurity`. The compiled
+[`ExternalIdentitySecurityConfigurationExample`](../vireo-starter-documentation-examples/src/main/java/com/vireocode/docs/auth/ExternalIdentitySecurityConfigurationExample.java)
+contains an ordered, path-scoped stateless external chain and its browser-session
+chain. It intentionally leaves LDAP connection settings, external route ownership,
+key storage, tenancy, and authority policy to the application. Store API-key hashes
+only; use constant-time comparison, enforce expiry and revocation, and reveal a
+plaintext key only once at issuance.
+
+The LDAP dependency belongs to the consuming application; `vireo-auth` does not
+pull an identity provider into every application.
+
 ## Default endpoints
 
 | Operation | Method | Default path |

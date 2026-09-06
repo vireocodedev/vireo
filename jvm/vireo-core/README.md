@@ -49,15 +49,24 @@ service contracts without another JVM artifact.
 A managed aggregate normally provides:
 
 1. an entity extending `BaseEntity`;
-2. a DTO and MapStruct `BaseMapper`;
+2. either one DTO and MapStruct `BaseMapper`, or distinct create, PATCH, and
+   response models with `BaseRequestMapper`;
 3. a `SearchableRepository`;
-4. a `BaseService` subclass with one immutable `EntityConfig`.
+4. a `BaseService` or `BaseRequestService` subclass with one immutable `EntityConfig`.
 
 `BaseService` owns the CRUD transaction boundaries, soft-delete visibility,
 keyword population, optional filter compilation, history recording, and offline
 change publication. Customize the protected template hooks such as
 `validateCreateRequest`, `applyRelations`, and `performDelete`; overriding the
 public CRUD entry points is rejected because it can bypass those invariants.
+
+Use `BaseRequestService<ID, DOMAIN, CREATE, PATCH, RESPONSE>` for new HTTP
+contracts. Its `create(CREATE)` and `patch(ID, PATCH)` operations map only
+writable request models, then return `RESPONSE`. Map a writable relation as
+`<relation>Id` and resolve it in `applyCreateRelations` or
+`applyPatchRelations`; expose a relation name or display value only from the
+response model. This keeps the partial PATCH shape explicit and prevents
+server-owned fields from becoming writable by accident.
 
 History is opt-in per entity. If `EntityConfig.history` is present but no
 `HistoryEventsRecorder` exists, the operation fails before persistence instead
@@ -96,7 +105,14 @@ non-anonymous principal is available and must not be blank.
 
 ## Web and security semantics
 
-- `ApiError` is the stable error body for validation, malformed input,
+- `ApiError(status, code, message, errors, timestamp)` is the stable error
+  body. `code` is an uppercase-snake-case, machine-readable contract; the
+  existing four-argument constructor remains binary compatible and uses
+  `REQUEST_FAILED`.
+- Core emits `VALIDATION_FAILED`, `MALFORMED_REQUEST`, `INVALID_REQUEST`,
+  `NOT_FOUND`, `METHOD_NOT_ALLOWED`, `UNSUPPORTED_MEDIA_TYPE`, `CONFLICT`,
+  `UNAUTHORIZED`, `FORBIDDEN`, `INTERNAL_ERROR`, or `REQUEST_FAILED`.
+- Validation, malformed input,
   authentication, authorization, status exceptions, and unexpected failures.
 - Duplicate validation errors for one field are retained in deterministic
   order rather than overwritten.
@@ -105,6 +121,9 @@ non-anonymous principal is available and must not be blank.
 - Missing routes, unsupported methods/media types, invalid arguments, and
   persistence/optimistic conflicts retain safe 404/405/415/400/409 responses
   instead of collapsing into a generic 500.
+- Throw `ApplicationException` for an intentional domain failure that needs a
+  stable error code and a deliberately safe client message. Do not pass
+  persistence, identity, or upstream exception messages through it.
 - `RestUtils.makePageable` rejects invalid public request values as HTTP 400 and
   caps requests at page 10,000 and 200 rows per page. There is no public
   all-rows sentinel, and search text is limited to 256 characters.

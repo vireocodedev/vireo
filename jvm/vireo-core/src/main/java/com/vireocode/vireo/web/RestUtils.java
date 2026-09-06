@@ -19,31 +19,31 @@ public final class RestUtils {
     }
 
     public static ResponseStatusException notFound(String param, String value) {
-        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Entity with " + param + "=" + value + " not found");
+        return new ApplicationException(HttpStatus.NOT_FOUND, "NOT_FOUND", "Entity with " + param + "=" + value + " not found");
     }
 
     public static ResponseStatusException badRequest(String message) {
-        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
+        return new ApplicationException(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", message);
     }
 
     public static ResponseStatusException forbidden(String message) {
-        return new ResponseStatusException(HttpStatus.FORBIDDEN, message);
+        return new ApplicationException(HttpStatus.FORBIDDEN, "FORBIDDEN", message);
     }
 
     public static ResponseStatusException conflict(String message) {
-        return new ResponseStatusException(HttpStatus.CONFLICT, message);
+        return new ApplicationException(HttpStatus.CONFLICT, "CONFLICT", message);
     }
 
     public static ResponseStatusException unauthorized(String message) {
-        return new ResponseStatusException(HttpStatus.UNAUTHORIZED, message);
+        return new ApplicationException(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", message);
     }
 
     public static ResponseStatusException internalServerError(String message) {
-        return new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, message);
+        return new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", message);
     }
 
     public static ResponseStatusException notImplemented(String message) {
-        return new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, message);
+        return new ApplicationException(HttpStatus.NOT_IMPLEMENTED, "REQUEST_FAILED", message);
     }
 
     public static SearchablePageable makePageable(int page, int rowsPerPage, String sortBy, String sortDirection,

@@ -34,6 +34,14 @@ class RestUtilsTest {
     }
 
     @Test
+    void factoryExceptions_UseStableApplicationCodesWithoutChangingReturnTypes() {
+        ResponseStatusException exception = RestUtils.notFound("id", "7");
+
+        assertTrue(exception instanceof ApplicationException);
+        assertEquals("NOT_FOUND", ((ApplicationException) exception).getCode());
+    }
+
+    @Test
     void makePageable_UsesSortDirectionAndRowsPerPageRules() {
         SearchablePageable asc = RestUtils.makePageable(1, 20, "name", "asc", "abc");
         assertEquals(1, asc.getPageable().getPageNumber());

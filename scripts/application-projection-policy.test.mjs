@@ -93,6 +93,7 @@ test("template release operations are excluded from every project profile", () =
 
 test("template maintainer policy wrappers are excluded from full-stack projects", () => {
   for (const path of [
+    "scripts/codex-customization-policy.test.mjs",
     "contracts/platform-support-policy.json",
     "scripts/platform-support-policy.mjs",
     "scripts/public-contract-policy.mjs",

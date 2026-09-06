@@ -138,7 +138,13 @@
       "id": "template-codex-guidance",
       "category": "maintainer-only",
       "profiles": ["full-stack", "frontend"],
-      "paths": ["AGENTS.md", "frontend/AGENTS.md", "src/AGENTS.md", "scripts/AGENTS.md"],
+      "paths": [
+        "AGENTS.md",
+        "frontend/AGENTS.md",
+        "src/AGENTS.md",
+        "scripts/AGENTS.md",
+        "scripts/codex-customization-policy.test.mjs"
+      ],
       "prefixes": [".agents/skills/"]
     },
     {
