@@ -231,7 +231,7 @@
         "status": "current",
         "templateCommit": "0557990f024a8736b6e661f8fc264861deb99b65",
         "rootVireoScript": "npx --yes --package=create-vireo@0.8.7 vireo",
-        "starterJvmVersion": "0.3.1",
+        "starterJvmVersion": "0.4.0",
         "managedRootScripts": { "doctor:json": "node scripts/vireo-frontend-doctor.mjs --json" },
         "managedFrontendScripts": {
           "full-stack": {

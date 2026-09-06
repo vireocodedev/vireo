@@ -53,7 +53,7 @@ artifact versions rather than replacing them. The current mapping includes:
 - the exact starter-template commit; and
 - the immutable GitHub Pages reference snapshot.
 
-The machine release ID, currently `npm-0.8.7_jvm-0.3.1`, remains an internal exact
+The machine release ID, currently `npm-0.8.7_jvm-0.4.0`, remains an internal exact
 snapshot key. It is deliberately not the primary navigation label.
 
 When a future documentation line becomes current, retain the prior friendly route as

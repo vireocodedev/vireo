@@ -1,5 +1,10 @@
 # Vireo JVM changelog
 
+## 0.4.0
+
+- **vireo-core:** Add compatible request-aware CRUD services and stable coded API errors for generated Vireo backends.
+- **vireo-auth:** Add a reusable browser-session security chain for applications with narrower external API chains.
+
 ## 0.3.1
 
 - **vireo-bom:** Raise managed dependency floors to versions containing the current Jackson, Tomcat, and Swagger UI security fixes.

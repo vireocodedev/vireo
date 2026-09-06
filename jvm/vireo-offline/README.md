@@ -10,7 +10,7 @@ Offline-capable applications otherwise duplicate command persistence, retry clas
 
 ```groovy
 dependencies {
-    implementation platform("com.vireocode:vireo-bom:0.3.1")
+    implementation platform("com.vireocode:vireo-bom:0.4.0")
     implementation "com.vireocode:vireo-offline"
 }
 ```

@@ -1,5 +1,11 @@
 # @vireocodedev/infrastructure
 
+## 0.3.0
+
+### Minor Changes
+
+- 7d02039: Add httpPatch to AxiosHttpClient alongside the existing httpGet/httpPost/httpPut/httpDelete verbs, for schema-validated PATCH-based update calls.
+
 ## 0.2.2
 
 ### Patch Changes

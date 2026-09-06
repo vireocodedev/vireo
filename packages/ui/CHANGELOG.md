@@ -1,5 +1,12 @@
 # @vireocodedev/ui
 
+## 0.3.2
+
+### Patch Changes
+
+- Updated dependencies [7d02039]
+  - @vireocodedev/infrastructure@0.3.0
+
 ## 0.3.1
 
 ### Patch Changes

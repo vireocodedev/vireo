@@ -38,7 +38,7 @@ Import the BOM once, then omit versions from individual Vireo modules:
 
 ```kotlin
 dependencies {
-    implementation(platform("com.vireocode:vireo-bom:0.3.1"))
+    implementation(platform("com.vireocode:vireo-bom:0.4.0"))
     implementation("com.vireocode:vireo-core")
     implementation("com.vireocode:vireo-auth")
 }

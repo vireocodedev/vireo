@@ -14,7 +14,7 @@ Gradle:
 
 ```groovy
 dependencies {
-    implementation platform("com.vireocode:vireo-bom:0.3.1")
+    implementation platform("com.vireocode:vireo-bom:0.4.0")
     implementation "com.vireocode:vireo-core"
 }
 ```
@@ -27,7 +27,7 @@ Maven:
     <dependency>
       <groupId>com.vireocode</groupId>
       <artifactId>vireo-bom</artifactId>
-      <version>0.3.1</version>
+      <version>0.4.0</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>

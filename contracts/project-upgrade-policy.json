@@ -66,7 +66,7 @@
       "createVireo": "0.8.7",
       "templateVersion": "0.8.7",
       "templateCommit": "0557990f024a8736b6e661f8fc264861deb99b65",
-      "starterJvmVersion": "0.3.1",
+      "starterJvmVersion": "0.4.0",
       "status": "current"
     }
   },

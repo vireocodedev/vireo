@@ -1,26 +1,26 @@
 {
   "schemaVersion": 1,
   "publicBaseUrl": "https://vireocodedev.github.io/vireo",
-  "currentRelease": "npm-0.8.7_jvm-0.3.1",
+  "currentRelease": "npm-0.8.7_jvm-0.4.0",
   "releases": [
     {
-      "id": "npm-0.8.7_jvm-0.3.1",
+      "id": "npm-0.8.7_jvm-0.4.0",
       "documentationVersion": "0.3",
       "documentationLabel": "Vireo 0.3",
       "status": "current",
       "npm": [
         { "package": "create-vireo", "version": "0.8.7" },
         { "package": "@vireocodedev/history", "version": "0.2.2" },
-        { "package": "@vireocodedev/infrastructure", "version": "0.2.2" },
+        { "package": "@vireocodedev/infrastructure", "version": "0.3.0" },
         { "package": "@vireocodedev/localization", "version": "0.2.2" },
         { "package": "@vireocodedev/query", "version": "0.2.2" },
         { "package": "@vireocodedev/shell", "version": "0.2.2" },
         { "package": "@vireocodedev/sqlite", "version": "0.2.3" },
-        { "package": "@vireocodedev/ui", "version": "0.3.1" }
+        { "package": "@vireocodedev/ui", "version": "0.3.2" }
       ],
       "jvm": {
         "group": "com.vireocode",
-        "version": "0.3.1",
+        "version": "0.4.0",
         "modules": ["vireo-bom", "vireo-core", "vireo-auth", "vireo-query", "vireo-offline", "vireo-history"]
       },
       "template": {
@@ -34,7 +34,7 @@
         "source": "https://github.com/vireocodedev/vireo",
         "npm": "https://www.npmjs.com/org/vireocodedev",
         "jvm": "https://central.sonatype.com/namespace/com.vireocode",
-        "jvmTag": "https://github.com/vireocodedev/vireo/releases/tag/jvm-v0.3.1",
+        "jvmTag": "https://github.com/vireocodedev/vireo/releases/tag/jvm-v0.4.0",
         "compatibility": "https://github.com/vireocodedev/vireo/blob/main/docs/COMPATIBILITY.md",
         "migration": "https://github.com/vireocodedev/vireo/tree/main/docs/migration",
         "template": "https://github.com/vireocodedev/vireo-template/releases/tag/starter-template%400.8.7"
