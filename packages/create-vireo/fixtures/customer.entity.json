@@ -7,8 +7,6 @@
   "api": { "path": "/api/customers" },
   "permissions": { "read": "hasRole('USER')", "manage": "hasRole('SUPERADMIN')" },
   "capabilities": { "history": false, "offline": false, "query": true },
-  "fields": [
-    { "name": "legalName", "type": "string", "required": true, "query": { "searchable": true } }
-  ],
+  "fields": [{ "name": "legalName", "type": "string", "required": true, "query": { "searchable": true } }],
   "localization": { "en": { "singular": "Customer", "plural": "Customers" } }
 }

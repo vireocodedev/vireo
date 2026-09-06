@@ -610,7 +610,9 @@ export function parseEntitySchema(value: unknown): VireoEntitySchema {
       ? []
       : !Array.isArray(value.relationships)
         ? (problems.push("relationships must be an array"), [])
-        : value.relationships.map((relationship, index) => validateRelationship(relationship, index, problems)).filter(Boolean);
+        : value.relationships
+            .map((relationship, index) => validateRelationship(relationship, index, problems))
+            .filter(Boolean);
   const relationshipNames = relationships.map(relationship => relationship!.name);
   const relationshipSqlNames = relationships.map(relationship => `${entityFieldSqlName(relationship!.name)}_id`);
   if (new Set(relationshipNames).size !== relationshipNames.length) problems.push("relationship names must be unique");

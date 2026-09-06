@@ -294,7 +294,13 @@
         "scripts/lib/documentation-ownership-contract.mjs"
       ],
       "excludePaths": ["docs/roadmap/phase-5/evidence/aggregate.json"],
-      "pathPrefixes": ["docs/", "site/content/", "packages/ui/storybook/", "packages/ui/.storybook-vireo/"],
+      "pathPrefixes": [
+        "docs/",
+        "ui-ux-handbook/",
+        "site/content/",
+        "packages/ui/storybook/",
+        "packages/ui/.storybook-vireo/"
+      ],
       "patterns": [
         "^packages/[^/]+/(?:src/|docs/|fixtures/|schema/|templates/|storybook/|\\.storybook-vireo/)",
         "^packages/[^/]+/(?:api-surface\\.json|package\\.json|tsconfig(?:\\.[^/]+)?\\.json|(?:vite|vitest(?:\\.storybook)?)\\.config\\.(?:[cm]?js|ts)|build\\.mjs|(?:README|CHANGELOG|AGENTS)\\.md)$",

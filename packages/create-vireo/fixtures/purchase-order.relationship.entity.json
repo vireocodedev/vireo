@@ -7,9 +7,7 @@
   "api": { "path": "/api/purchase-orders" },
   "permissions": { "read": "hasRole('USER')", "manage": "hasRole('SUPERADMIN')" },
   "capabilities": { "history": false, "offline": false, "query": true },
-  "fields": [
-    { "name": "number", "type": "string", "required": true, "query": { "searchable": true } }
-  ],
+  "fields": [{ "name": "number", "type": "string", "required": true, "query": { "searchable": true } }],
   "relationships": [
     { "name": "customer", "kind": "many-to-one", "target": "Customer", "required": true, "displayField": "legalName" }
   ],
