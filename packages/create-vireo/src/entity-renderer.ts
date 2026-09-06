@@ -1,8 +1,8 @@
 import {
   entityFieldSqlName,
   type EntityFieldSchema,
-  type EntityRelationshipSchema,
   type EntityFieldType,
+  type EntityRelationshipSchema,
   type VireoEntitySchema,
 } from "./entity-schema.js";
 
