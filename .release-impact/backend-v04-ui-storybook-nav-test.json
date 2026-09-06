@@ -1,6 +1,0 @@
-{
-  "schemaVersion": 1,
-  "artifact": "npm:@vireocodedev/ui",
-  "decision": "no-release",
-  "justification": "Only updates a Storybook navigation test assertion to include the ExternalIdentity.mdx page already declared by the vireo-auth JVM release decision; no package behavior changed."
-}

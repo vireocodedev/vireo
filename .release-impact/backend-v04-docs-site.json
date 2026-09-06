@@ -1,6 +1,0 @@
-{
-  "schemaVersion": 1,
-  "artifact": "application:documentation-site",
-  "decision": "no-release",
-  "justification": "Only regenerates the current Vireo 0.3 documentation snapshot archive to match content already covered by this branch's other release decisions; the site itself has no independent deploy step here."
-}
