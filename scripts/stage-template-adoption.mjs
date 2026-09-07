@@ -88,8 +88,17 @@ function changesetBump(current, target) {
   if (targetMajor !== currentMajor)
     throw new Error("Template adoption refuses a major create-vireo version transition.");
   if (targetMinor === currentMinor && targetPatch === currentPatch + 1) return "patch";
-  if (targetMinor === currentMinor + 1 && targetPatch === 0) return "minor";
-  throw new Error("Template adoption version must be the exact next patch or next minor release.");
+  // Template's own release-coordinate-change detection only ever fires for the
+  // exact push that changes it, so a Template release whose tag/GitHub Release
+  // creation fails partway can never be retried later (see
+  // planTemplateRelease's intentionally strict "release coordinates did not
+  // change" gate) — the only safe recovery is preparing and releasing the next
+  // version instead, which can leave a gap (e.g. Template goes straight from
+  // 0.8.7 to 0.9.1 because 0.9.0 was prepared but never actually tagged).
+  // Accept any forward minor-version jump here so create-vireo can still adopt
+  // that real, immutable Template release.
+  if (targetMinor > currentMinor) return "minor";
+  throw new Error("Template adoption version must be the exact next patch or a later minor release.");
 }
 
 function stageEmptySafeUpgrade(repositoryRoot, plan) {
