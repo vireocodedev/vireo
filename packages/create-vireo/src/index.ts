@@ -72,7 +72,7 @@ const TEMPLATE_VERSION = CREATE_VIREO_PACKAGE_VERSION;
 const TEMPLATE_TAG = `starter-template@${TEMPLATE_VERSION}`;
 const TEMPLATE_STARTER_JVM_BASELINE = "0.3.1";
 const INITIAL_APPLICATION_VERSION = "0.1.0";
-export const TEMPLATE_COMMIT = "0557990f024a8736b6e661f8fc264861deb99b65";
+export const TEMPLATE_COMMIT = "a04c1b688a7fcc33427d5f4337a06350582ee289";
 export const TEMPLATE_ARCHIVE_URL = `https://codeload.github.com/vireocodedev/vireo-template/tar.gz/${TEMPLATE_COMMIT}`;
 const CREATE_VIREO_COMMAND = `npx --yes --package=create-vireo@${CREATE_VIREO_PACKAGE_VERSION} vireo`;
 
