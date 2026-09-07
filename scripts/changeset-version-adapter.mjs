@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { synchronizeDocumentationRelease } from "./synchronize-documentation-release.mjs";
 import { applyJvmReleaseImpact } from "./release-impact-version.mjs";
 import { consumeJvmOnlyReleaseTrigger } from "./prepare-jvm-only-release-trigger.mjs";
+import { correctCandidateNpmVersion } from "./correct-candidate-npm-version.mjs";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const localNpx = join(repositoryRoot, "node_modules", ".bin", "npx");
@@ -28,6 +29,7 @@ try {
   if (result.error) throw result.error;
   if (result.status !== 0) process.exitCode = result.status ?? 1;
   else {
+    correctCandidateNpmVersion(repositoryRoot);
     applyJvmReleaseImpact(repositoryRoot);
     await synchronizeDocumentationRelease(repositoryRoot);
   }
