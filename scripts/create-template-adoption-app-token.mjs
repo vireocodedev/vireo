@@ -41,7 +41,10 @@ export async function createInstallationToken({ appId, privateKey, fetchResponse
       Authorization: `Bearer ${jwt}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ repositories: ["vireo"], permissions: { contents: "write", pull_requests: "write", workflows: "write" } }),
+    body: JSON.stringify({
+      repositories: ["vireo"],
+      permissions: { contents: "write", pull_requests: "write", workflows: "write" },
+    }),
     redirect: "error",
     signal: AbortSignal.timeout(10_000),
   });
