@@ -34,6 +34,18 @@ const impactRecord = record => ({
   headContent: `${JSON.stringify({ schemaVersion: 1, ...record }, null, 2)}\n`,
 });
 const validate = changes => validateReleaseImpact({ policy, ecosystemContract, changes });
+const consumedJvmImpactRecord = record => ({
+  status: "D",
+  path: `.release-impact/${record.artifact.replaceAll(/[^a-z0-9]+/giu, "-")}.json`,
+  baseContent: `${JSON.stringify({ schemaVersion: 1, ...record }, null, 2)}\n`,
+  headContent: null,
+});
+const jvmVersion = (before, after) => ({
+  status: "M",
+  path: "jvm/gradle.properties",
+  baseContent: `group=com.vireocode\nversion=${before}\n`,
+  headContent: `group=com.vireocode\nversion=${after}\n`,
+});
 
 test("requires an affected npm package to have a changed Changeset", () => {
   const result = validate([sourceChange("packages/sqlite/src/runtime.ts")]);
@@ -120,6 +132,114 @@ test("requires JVM release intent and validates its bump and changelog summary",
     }),
   ]);
   assert.deepEqual(accepted.problems, []);
+});
+
+test("accepts consumed JVM release records only with their exact coordinated version and changelog", () => {
+  const result = validate([
+    sourceChange("jvm/vireo-auth/src/main/java/example/Authentication.java"),
+    sourceChange("jvm/vireo-core/src/main/java/example/Service.java"),
+    consumedJvmImpactRecord({
+      artifact: "jvm:vireo-auth",
+      decision: "release",
+      bump: "minor",
+      summary: "Publish the reusable browser-session security chain.",
+    }),
+    consumedJvmImpactRecord({
+      artifact: "jvm:vireo-core",
+      decision: "release",
+      bump: "minor",
+      summary: "Publish request-aware CRUD services and coded API errors.",
+    }),
+    jvmVersion("0.3.1", "0.4.0"),
+    versionedChangelog("jvm/CHANGELOG.md", "0.4.0"),
+  ]);
+
+  assert.deepEqual(result.problems, []);
+  assert.deepEqual(
+    result.decisions.map(({ artifact, decision, source }) => ({ artifact, decision, source })),
+    [
+      {
+        artifact: "jvm:vireo-auth",
+        decision: "release",
+        source: ".release-impact/jvm-vireo-auth.json (consumed)",
+      },
+      {
+        artifact: "jvm:vireo-core",
+        decision: "release",
+        source: ".release-impact/jvm-vireo-core.json (consumed)",
+      },
+    ],
+  );
+});
+
+test("rejects consumed JVM release records when their coordinated version or changelog is not exact", () => {
+  const record = consumedJvmImpactRecord({
+    artifact: "jvm:vireo-auth",
+    decision: "release",
+    bump: "minor",
+    summary: "Publish the reusable browser-session security chain.",
+  });
+  const wrongVersion = validate([
+    sourceChange("jvm/vireo-auth/src/main/java/example/Authentication.java"),
+    record,
+    jvmVersion("0.3.1", "0.3.2"),
+    versionedChangelog("jvm/CHANGELOG.md", "0.3.2"),
+  ]);
+  assert.ok(wrongVersion.problems.some(problem => problem.includes("exact coordinated JVM version bump")));
+
+  const missingHeading = validate([
+    sourceChange("jvm/vireo-auth/src/main/java/example/Authentication.java"),
+    record,
+    jvmVersion("0.3.1", "0.4.0"),
+    versionedChangelog("jvm/CHANGELOG.md", "0.3.2"),
+  ]);
+  assert.ok(missingHeading.problems.some(problem => problem.includes("exact coordinated JVM version bump")));
+
+  const existingHeading = validate([
+    sourceChange("jvm/vireo-auth/src/main/java/example/Authentication.java"),
+    record,
+    jvmVersion("0.3.1", "0.4.0"),
+    {
+      status: "M",
+      path: "jvm/CHANGELOG.md",
+      baseContent: "# Vireo JVM changelog\n\n## 0.4.0\n\n- Existing release notes.\n",
+      headContent: "# Vireo JVM changelog\n\n## 0.4.0\n\n- Existing release notes.\n\n- Unrelated edit.\n",
+    },
+  ]);
+  assert.ok(existingHeading.problems.some(problem => problem.includes("exact coordinated JVM version bump")));
+});
+
+test("ignores deletion of an already-consumed JVM record when no JVM artifact is affected", () => {
+  const result = validate([
+    consumedJvmImpactRecord({
+      artifact: "jvm:vireo-auth",
+      decision: "release",
+      bump: "minor",
+      summary: "Publish the reusable browser-session security chain.",
+    }),
+  ]);
+
+  assert.deepEqual(result.problems, []);
+  assert.deepEqual(result.decisions, []);
+});
+
+test("does not accept a record-shaped deleted JSON file outside release-impact metadata", () => {
+  const record = consumedJvmImpactRecord({
+    artifact: "jvm:vireo-auth",
+    decision: "release",
+    bump: "minor",
+    summary: "Publish the reusable browser-session security chain.",
+  });
+  const result = validate([
+    sourceChange("jvm/vireo-auth/src/main/java/example/Authentication.java"),
+    { ...record, path: "fixtures/consumed-jvm-record.json" },
+    jvmVersion("0.3.1", "0.4.0"),
+    versionedChangelog("jvm/CHANGELOG.md", "0.4.0"),
+  ]);
+
+  assert.ok(
+    result.problems.some(problem => problem.includes("jvm:vireo-auth is affected but has no release decision")),
+  );
 });
 
 test("requires deploy intent for the documentation application", () => {

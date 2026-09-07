@@ -554,7 +554,6 @@ function synchronizeCurrentReleaseGuidance({
     templateVersion,
     publicUpgradeRelease,
     candidateUpgradeRelease,
-    historicalEdge,
     jvmVersion,
     "docs/COMPATIBILITY.md current Template baseline",
   );
@@ -593,7 +592,6 @@ function synchronizeCurrentReleaseGuidance({
     templateVersion,
     publicUpgradeRelease,
     candidateUpgradeRelease,
-    historicalEdge,
     jvmVersion,
     "packages/create-vireo/README.md current Template baseline",
   );
@@ -745,26 +743,18 @@ function replaceCurrentTemplateBaseline(
   templateVersion,
   publicUpgradeRelease,
   candidateUpgradeRelease,
-  historicalEdge,
   jvmVersion,
   label,
 ) {
+  const stableSemverCapture = "((?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*))";
   const pattern = new RegExp(
     "The immutable `starter-template@" +
       escapeRegExp(oldTemplateVersion) +
-      "` source (?:baseline uses\\n`starterVersion=[^`]+`; `create-vireo@" +
+      "` source baseline uses\\n`starterVersion=" +
+      stableSemverCapture +
+      "`; `create-vireo@" +
       escapeRegExp(publicUpgradeRelease) +
-      "` generates and upgrades\\nfull-stack consumers with the coordinated `" +
-      escapeRegExp(jvmVersion) +
-      "` JVM release\\.|baseline retains\\n`starterVersion=[^`]+`; `create-vireo@" +
-      escapeRegExp(publicUpgradeRelease) +
-      "` normalizes generated and upgraded\\nfull-stack consumers to the coordinated `" +
-      escapeRegExp(jvmVersion) +
-      "` JVM release\\.|commit intentionally retains its\\n`starterVersion=[^`]+` baseline\\. Full-stack creation and the " +
-      escapeRegExp(historicalEdge) +
-      " upgrade\\nnormalize that managed declaration to the current Vireo JVM release, `" +
-      escapeRegExp(jvmVersion) +
-      "`, before\\nrecording managed hashes\\.)",
+      "` generates and upgrades\\nfull-stack consumers with the coordinated `\\1` JVM release\\.",
     "u",
   );
   const replacement = `The immutable \`starter-template@${templateVersion}\` source baseline uses\n\`starterVersion=${jvmVersion}\`; \`create-vireo@${candidateUpgradeRelease}\` generates and upgrades\nfull-stack consumers with the coordinated \`${jvmVersion}\` JVM release.`;

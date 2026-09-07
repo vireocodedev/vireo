@@ -162,6 +162,10 @@ function changelogDeclaresVersion(changelog, version) {
   return new RegExp(`^## ${version.replaceAll(".", "\\.")}\\r?$`, "mu").test(changelog);
 }
 
+function changelogVersionHeadingCount(changelog, version) {
+  return [...changelog.matchAll(new RegExp(`^## ${version.replaceAll(".", "\\.")}\\r?$`, "gmu"))].length;
+}
+
 function packageWasVersioned(artifact, changesByPath) {
   const prefix = artifact.pathPrefixes[0];
   const manifest = changesByPath.get(`${prefix}package.json`);
@@ -182,6 +186,67 @@ function packageWasVersioned(artifact, changesByPath) {
   } catch {
     return false;
   }
+}
+
+const bumpRank = { patch: 1, minor: 2, major: 3 };
+
+function bumpStableSemver(version, bump) {
+  const parsed = parseStableSemver(version);
+  if (!parsed || !bumpRank[bump]) return null;
+  const [rawMajor, rawMinor, rawPatch] = parsed;
+  const major = Number(rawMajor);
+  const minor = Number(rawMinor);
+  const patch = Number(rawPatch);
+  if (bump === "major") return `${major + 1}.0.0`;
+  if (bump === "minor") return `${major}.${minor + 1}.0`;
+  return `${major}.${minor}.${patch + 1}`;
+}
+
+function jvmVersionFromProperties(content) {
+  const version = typeof content === "string" ? content.match(/^version=(.+)$/mu)?.[1]?.trim() : null;
+  return parseStableSemver(version) ? version : null;
+}
+
+function consumedJvmReleaseWasVersioned(bump, changesByPath) {
+  const properties = changesByPath.get("jvm/gradle.properties");
+  const changelog = changesByPath.get("jvm/CHANGELOG.md");
+  if (!properties || !changelog || properties.status === "D" || changelog.status === "D") return false;
+  const before = jvmVersionFromProperties(properties.baseContent);
+  const after = jvmVersionFromProperties(properties.headContent);
+  return (
+    before !== null &&
+    after === bumpStableSemver(before, bump) &&
+    typeof changelog.baseContent === "string" &&
+    typeof changelog.headContent === "string" &&
+    changelogVersionHeadingCount(changelog.baseContent, after) === 0 &&
+    changelogVersionHeadingCount(changelog.headContent, after) === 1
+  );
+}
+
+function parseConsumedJvmReleaseRecord(change, artifactsById, policy, problems) {
+  if (
+    change.status !== "D" ||
+    !change.path.startsWith(metadataPrefix) ||
+    change.path === `${metadataPrefix}README.md` ||
+    !change.path.endsWith(".json")
+  ) {
+    return null;
+  }
+  let record;
+  try {
+    record = JSON.parse(change.baseContent ?? "");
+  } catch {
+    return null;
+  }
+  const artifact = artifactsById.get(record.artifact);
+  if (record.decision !== "release" || artifact?.kind !== "jvm") return null;
+  const decision = parseImpactRecord(
+    { ...change, status: "M", headContent: change.baseContent },
+    artifactsById,
+    policy,
+    problems,
+  );
+  return decision ? { ...decision, bump: record.bump } : null;
 }
 
 function appliedPackageVersionSource(artifact) {
@@ -283,6 +348,28 @@ export function validateReleaseImpact({ policy, ecosystemContract, changes }) {
     if (decision) addDecision(decision);
   }
 
+  const consumedJvmDecisions = changes
+    .map(change => parseConsumedJvmReleaseRecord(change, artifactsById, policy, problems))
+    .filter(Boolean);
+  if (consumedJvmDecisions.some(decision => affected.has(decision.artifact))) {
+    const coordinatedBump = consumedJvmDecisions
+      .map(decision => decision.bump)
+      .sort((left, right) => bumpRank[right] - bumpRank[left])[0];
+    if (consumedJvmReleaseWasVersioned(coordinatedBump, changesByPath)) {
+      for (const decision of consumedJvmDecisions) {
+        addDecision({
+          artifact: decision.artifact,
+          decision: decision.decision,
+          source: `${decision.source} (consumed)`,
+        });
+      }
+    } else {
+      problems.push(
+        "Consumed JVM release records require the exact coordinated JVM version bump in jvm/gradle.properties and its exact jvm/CHANGELOG.md heading",
+      );
+    }
+  }
+
   for (const artifactId of [...affected].sort()) {
     if (!decisions.has(artifactId)) {
       const artifact = artifactsById.get(artifactId);
@@ -342,7 +429,8 @@ export function readGitChanges(baseReference, headReference) {
       path.startsWith(metadataPrefix) ||
       path.startsWith(changesetPrefix) ||
       path.endsWith("/package.json") ||
-      path.endsWith("/CHANGELOG.md");
+      path.endsWith("/CHANGELOG.md") ||
+      path === "jvm/gradle.properties";
     changes.push({
       status,
       path,

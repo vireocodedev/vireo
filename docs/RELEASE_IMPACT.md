@@ -74,6 +74,14 @@ release records. Review those generated changes and run the ordinary ecosystem
 and release gates before merging. Application decisions and no-release
 exemptions remain as the reviewable audit trail.
 
+The pull-request gate accepts a deleted JVM release record only when the same
+diff applies the exact coordinated bump in `jvm/gradle.properties` and adds the
+matching exact `## <version>` heading to `jvm/CHANGELOG.md`. This lets generated
+version pull requests consume their intent without recreating or renaming it;
+deleting an already-consumed record without an affected JVM artifact remains
+ordinary metadata cleanup. Unchanged records outside the pull-request diff remain
+ignored.
+
 ## Changesets version pull requests
 
 `corepack npm run version-packages` synchronizes the current documentation release
