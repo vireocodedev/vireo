@@ -1,7 +1,0 @@
-{
-  "schemaVersion": 1,
-  "artifact": "jvm:vireo-auth",
-  "decision": "release",
-  "bump": "minor",
-  "summary": "Add a reusable browser-session security chain for applications with narrower external API chains."
-}

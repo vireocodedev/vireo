@@ -1,7 +1,0 @@
-{
-  "schemaVersion": 1,
-  "artifact": "jvm:vireo-core",
-  "decision": "release",
-  "bump": "minor",
-  "summary": "Add compatible request-aware CRUD services and stable coded API errors for generated Vireo backends."
-}

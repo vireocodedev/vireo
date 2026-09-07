@@ -295,6 +295,32 @@ test("fails closed when an exact-version JVM BOM document is missing its prior c
   }
 });
 
+test("replaces an old Template baseline independently of the prior current Maven version", async () => {
+  const root = makeFixture();
+  try {
+    setPriorCurrentMavenVersion(root, "0.4.0");
+    for (const path of ["docs/COMPATIBILITY.md", "packages/create-vireo/README.md"]) {
+      const fullPath = join(root, path);
+      writeFileSync(
+        fullPath,
+        readFileSync(fullPath, "utf8")
+          .replaceAll("starterVersion=0.3.0", "starterVersion=0.3.1")
+          .replaceAll("coordinated `0.3.0` JVM release", "coordinated `0.3.1` JVM release"),
+      );
+    }
+
+    await synchronizeFixtureDocumentationRelease(root);
+
+    for (const path of ["docs/COMPATIBILITY.md", "packages/create-vireo/README.md"]) {
+      const output = readFileSync(join(root, path), "utf8");
+      assert.match(output, /starterVersion=0\.4\.0.*coordinated `0\.4\.0` JVM release/su, path);
+      assert.doesNotMatch(output, /starterVersion=0\.3\.1/u, path);
+    }
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test("synchronizes two consecutive releases with stable gap-register guidance", async () => {
   const root = makeFixture();
   try {
@@ -784,7 +810,7 @@ function makeFixture({ managedEdgeScope = "legacy", lockfileRefresh = "required"
   }
   writeFileSync(
     join(root, "docs", "COMPATIBILITY.md"),
-    "| Artifact | Version |\n| --- | --- |\n| `create-vireo` | 0.2.0 |\n| `@vireocodedev/sqlite` | 0.2.1 |\n| `com.vireocode:vireo-*` | 0.3.0 |\n\nThe current supported project-upgrade\nedge is 0.1.0→0.2.0; other historical evidence remains retained.\n\nThe immutable `starter-template@0.2.0` source baseline retains\n`starterVersion=0.3.0`; `create-vireo@0.2.0` normalizes generated and upgraded\nfull-stack consumers to the coordinated `0.4.0` JVM release.\n",
+    "| Artifact | Version |\n| --- | --- |\n| `create-vireo` | 0.2.0 |\n| `@vireocodedev/sqlite` | 0.2.1 |\n| `com.vireocode:vireo-*` | 0.3.0 |\n\nThe current supported project-upgrade\nedge is 0.1.0→0.2.0; other historical evidence remains retained.\n\nThe immutable `starter-template@0.2.0` source baseline uses\n`starterVersion=0.3.0`; `create-vireo@0.2.0` generates and upgrades\nfull-stack consumers with the coordinated `0.3.0` JVM release.\n",
   );
   const managedEdgeScopeWording =
     managedEdgeScope === "legacy"
@@ -792,7 +818,7 @@ function makeFixture({ managedEdgeScope = "legacy", lockfileRefresh = "required"
       : "Apply changes only the managed surfaces explicitly declared by the selected edge.";
   writeFileSync(
     join(root, "packages", "create-vireo", "README.md"),
-    `The current supported adjacent release pair is a project created by \`create-vireo\`\n0.1.0 upgraded to 0.2.0.\n\n\`\`\`bash\nvireo upgrade --to 0.2.0 --dry-run\nvireo upgrade --to 0.2.0 --apply --accept-application-owned\n\`\`\`\n\nThe preflight refuses unknown source commits, changed Vireo dependency declarations,\nlockfile drift, invalid/duplicate Flyway migration versions, and managed generated or\nwire-contract drift. ${managedEdgeScopeWording} Template files, domain logic, deployment, data migration, and adopted/ejected\ncode remain application-owned and must be reviewed against the target Template\ncommit ${"a".repeat(40)}. For the current 0.1.0→0.2.0\nedge, Vireo adds the six managed application-skill files under\n\`.agents/skills/\`; it never overwrites the application-owned root\n\`AGENTS.md\`, source, deployment descriptors, or \`.github\`\nreview policy.\n\n${storybookGuidance}\n\nThe immutable \`starter-template@0.2.0\` source commit intentionally retains its\n\`starterVersion=0.3.0\` baseline. Full-stack creation and the 0.1.0→0.2.0 upgrade\nnormalize that managed declaration to the current Vireo JVM release, \`0.4.0\`, before\nrecording managed hashes.\n`,
+    `The current supported adjacent release pair is a project created by \`create-vireo\`\n0.1.0 upgraded to 0.2.0.\n\n\`\`\`bash\nvireo upgrade --to 0.2.0 --dry-run\nvireo upgrade --to 0.2.0 --apply --accept-application-owned\n\`\`\`\n\nThe preflight refuses unknown source commits, changed Vireo dependency declarations,\nlockfile drift, invalid/duplicate Flyway migration versions, and managed generated or\nwire-contract drift. ${managedEdgeScopeWording} Template files, domain logic, deployment, data migration, and adopted/ejected\ncode remain application-owned and must be reviewed against the target Template\ncommit ${"a".repeat(40)}. For the current 0.1.0→0.2.0\nedge, Vireo adds the six managed application-skill files under\n\`.agents/skills/\`; it never overwrites the application-owned root\n\`AGENTS.md\`, source, deployment descriptors, or \`.github\`\nreview policy.\n\n${storybookGuidance}\n\nThe immutable \`starter-template@0.2.0\` source baseline uses\n\`starterVersion=0.3.0\`; \`create-vireo@0.2.0\` generates and upgrades\nfull-stack consumers with the coordinated \`0.3.0\` JVM release.\n`,
   );
   writeFileSync(
     join(root, "docs", "NPM_RELEASE.md"),
@@ -869,6 +895,44 @@ function makeFixture({ managedEdgeScope = "legacy", lockfileRefresh = "required"
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function setPriorCurrentMavenVersion(root, version) {
+  const ecosystemPath = join(root, "contracts", "ecosystem-release-contract.json");
+  const ecosystem = readJson(ecosystemPath);
+  const releaseId = `npm-0.2.0_jvm-${version}`;
+  ecosystem.current.id = releaseId;
+  ecosystem.current.maven.version = version;
+  ecosystem.compatibility.sets[0].release = releaseId;
+  ecosystem.compatibility.sets[0].mavenBom = `com.vireocode:vireo-bom:${version}`;
+  ecosystem.supportLines[0].release = releaseId;
+  writeJson(ecosystemPath, ecosystem);
+
+  const documentationPath = join(root, "contracts", "documentation-release-policy.json");
+  const documentation = readJson(documentationPath);
+  documentation.currentRelease = releaseId;
+  documentation.releases[0].id = releaseId;
+  documentation.releases[0].jvm.version = version;
+  documentation.releases[0].releaseLinks.jvmTag = `https://github.com/vireocodedev/vireo/releases/tag/jvm-v${version}`;
+  writeJson(documentationPath, documentation);
+
+  const lifecyclePath = join(root, "contracts", "release-lifecycle-policy.json");
+  const lifecycle = readJson(lifecyclePath);
+  lifecycle.supportLines[0].release = releaseId;
+  writeJson(lifecyclePath, lifecycle);
+
+  for (const path of [
+    "docs/PUBLIC_API.md",
+    "jvm/README.md",
+    "jvm/vireo-auth/README.md",
+    "jvm/vireo-bom/README.md",
+    "jvm/vireo-core/README.md",
+    "jvm/vireo-offline/README.md",
+    "jvm/vireo-query/README.md",
+  ]) {
+    const fullPath = join(root, path);
+    writeFileSync(fullPath, readFileSync(fullPath, "utf8").replaceAll("0.3.0", version));
+  }
 }
 
 function writeJson(path, value) {
