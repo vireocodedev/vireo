@@ -29,7 +29,7 @@ dependencies {
     testImplementation "com.github.docker-java:docker-java-transport-httpclient5:${dockerJavaVersion}"
     // docker-java declares this as Maven-provided; javac needs the annotation
     // types while compiling the compatibility bridge below.
-    testCompileOnly 'org.immutables:value:2.10.1'
+    testCompileOnly 'org.immutables:value:2.12.2'
     constraints {
         testImplementation "org.apache.httpcomponents.client5:httpclient5:${httpClient5Version}"
         testImplementation "org.apache.httpcomponents.core5:httpcore5:${httpCore5Version}"
