@@ -27,6 +27,17 @@ test("staging dry-run is deterministic and does not modify the repository", () =
   assert.equal(result.action, "draft");
   assert.equal(readFileSync(join(root, "packages/create-vireo/src/index.ts"), "utf8").includes(plan.commit), false);
 });
+test("accepts a later minor Template release when an intermediate version was prepared but never tagged", () => {
+  // A Template release whose tag/GitHub Release creation fails partway can
+  // never be retried for that exact version (planTemplateRelease's
+  // release-coordinate-change gate only fires once, on the exact push), so
+  // the next real Template release can land on a later minor with a nonzero
+  // patch (e.g. 0.8.7 -> 0.9.1, skipping the never-tagged 0.9.0). create-vireo
+  // must still be able to adopt that real, immutable release.
+  const skippedMinorPlan = { ...plan, version: "0.9.1", tag: "starter-template@0.9.1" };
+  const result = stageTemplateAdoption({ repositoryRoot: root, plan: skippedMinorPlan, dryRun: true });
+  assert.equal(result.action, "draft");
+});
 test("argument parser supports machine-readable dry-runs", () => {
   assert.deepEqual(parseStageArguments(["--plan", "plan.json", "--dry-run", "--json"]), {
     plan: "plan.json",
