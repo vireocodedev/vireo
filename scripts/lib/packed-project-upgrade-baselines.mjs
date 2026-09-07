@@ -49,7 +49,7 @@ export function assertPackedProjectUpgradeBaselines(packedPolicy) {
   const adjacentEdge = `${source.release}->${target.release}`;
   const currentBaselines = profileBaselines(graph, adjacentEdge);
   const currentAddsSkills = [currentBaselines["full-stack"], currentBaselines.frontend].some(baselines =>
-    baselines.some(baseline => managedConsumerSkillPaths.includes(baseline.path)),
+    baselines.some(baseline => baseline?.operation === "add" && managedConsumerSkillPaths.includes(baseline.path)),
   );
 
   if (currentAddsSkills) {

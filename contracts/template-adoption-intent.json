@@ -58,14 +58,7 @@
   "maven": {
     "group": "com.vireocode",
     "version": "0.4.0",
-    "modules": [
-      "vireo-auth",
-      "vireo-bom",
-      "vireo-core",
-      "vireo-history",
-      "vireo-offline",
-      "vireo-query"
-    ],
+    "modules": ["vireo-auth", "vireo-bom", "vireo-core", "vireo-history", "vireo-offline", "vireo-query"],
     "moduleDigests": {
       "vireo-auth": {
         "sha256": "fd3b3c5d3ad6b896c7daa4a2d4e5de4c41953b66a5c6c599d0367be9bdfdb21a",

@@ -483,7 +483,9 @@ try {
     );
   }
   if (!skillsAddedByCurrentEdge) {
-    for (const baseline of managedSkillBaselines) {
+    const activeManagedPaths = new Set(activeSourceManagedFiles.map(file => file.path));
+    const retainedSkillBaselines = managedSkillBaselines.filter(baseline => !activeManagedPaths.has(baseline.path));
+    for (const baseline of retainedSkillBaselines) {
       const path = join(upgradeFixture, baseline.path);
       mkdirSync(dirname(path), { recursive: true });
       writeFileSync(path, baseline.targetContent);
@@ -502,7 +504,7 @@ try {
                 .digest("hex"),
             },
             ...activeSourceManagedFiles,
-            ...managedSkillBaselines.map(baseline => ({ path: baseline.path, sha256: baseline.targetSha256 })),
+            ...retainedSkillBaselines.map(baseline => ({ path: baseline.path, sha256: baseline.targetSha256 })),
           ],
         },
         null,
@@ -599,9 +601,12 @@ try {
     );
     if (packedApply.dryRun) throw new Error("The packed vireo executable did not apply the accepted adjacent upgrade.");
   }
-  for (const baseline of managedSkillBaselines) {
-    if (readFileSync(join(upgradeFixture, baseline.path), "utf8") !== baseline.targetContent)
-      throw new Error("The packed vireo executable wrote incorrect managed skill bytes at " + baseline.path + ".");
+  const expectedSkillContentByPath = new Map(
+    managedSkillBaselines.map(baseline => [baseline.path, baseline.targetContent]),
+  );
+  for (const [path, targetContent] of expectedSkillContentByPath) {
+    if (readFileSync(join(upgradeFixture, path), "utf8") !== targetContent)
+      throw new Error("The packed vireo executable wrote incorrect managed skill bytes at " + path + ".");
   }
   if (existsSync(join(upgradeFixture, ".vireo", "application", ".agents"))) {
     throw new Error("The packed vireo executable wrote managed skills into the Template-only provenance directory.");
