@@ -3,8 +3,8 @@
   "contractId": "vireo-project-upgrade-graph",
   "packedPolicy": "packages/create-vireo/schema/vireo-upgrade-policy.json",
   "publicRelease": "0.8.7",
-  "previousRelease": "0.8.6",
-  "publicationState": "final",
+  "previousRelease": "0.8.7",
+  "publicationState": "candidate",
   "releaseCoordinates": {
     "0.6.0": {
       "createVireo": "0.6.0",
@@ -68,19 +68,64 @@
       "templateCommit": "0557990f024a8736b6e661f8fc264861deb99b65",
       "starterJvmVersion": "0.4.0",
       "status": "current"
+    },
+    "0.9.1": {
+      "createVireo": "0.9.1",
+      "templateVersion": "0.9.1",
+      "templateCommit": "a04c1b688a7fcc33427d5f4337a06350582ee289",
+      "starterJvmVersion": "0.4.0",
+      "status": "candidate"
     }
   },
   "historicalReleases": ["0.2.0", "0.3.0", "0.4.0", "0.5.0"],
   "requiredEdges": [
-    { "from": "0.2.0", "to": "0.3.0" },
-    { "from": "0.6.0", "to": "0.7.0" },
-    { "from": "0.7.0", "to": "0.8.0" },
-    { "from": "0.8.0", "to": "0.8.1" },
-    { "from": "0.8.1", "to": "0.8.2" },
-    { "from": "0.8.2", "to": "0.8.3" },
-    { "from": "0.8.3", "to": "0.8.4", "lockfileRefresh": "not-required" },
-    { "from": "0.8.4", "to": "0.8.6", "lockfileRefresh": "not-required" },
-    { "from": "0.8.6", "to": "0.8.7", "lockfileRefresh": "not-required" }
+    {
+      "from": "0.2.0",
+      "to": "0.3.0"
+    },
+    {
+      "from": "0.6.0",
+      "to": "0.7.0"
+    },
+    {
+      "from": "0.7.0",
+      "to": "0.8.0"
+    },
+    {
+      "from": "0.8.0",
+      "to": "0.8.1"
+    },
+    {
+      "from": "0.8.1",
+      "to": "0.8.2"
+    },
+    {
+      "from": "0.8.2",
+      "to": "0.8.3"
+    },
+    {
+      "from": "0.8.3",
+      "to": "0.8.4",
+      "lockfileRefresh": "not-required"
+    },
+    {
+      "from": "0.8.4",
+      "to": "0.8.6",
+      "lockfileRefresh": "not-required"
+    },
+    {
+      "from": "0.8.6",
+      "to": "0.8.7",
+      "lockfileRefresh": "not-required"
+    }
   ],
-  "maintenance": { "latestFixLine": "0.8.7", "priorCurrentUpgradeSource": "0.8.6", "backportsPromised": false }
+  "maintenance": {
+    "latestFixLine": "0.8.7",
+    "priorCurrentUpgradeSource": "0.8.6",
+    "backportsPromised": false
+  },
+  "candidateRelease": "0.9.1",
+  "finalization": {
+    "targetTemplateCommit": "a04c1b688a7fcc33427d5f4337a06350582ee289"
+  }
 }

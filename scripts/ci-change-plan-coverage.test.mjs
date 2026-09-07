@@ -14,7 +14,7 @@ const policy = JSON.parse(readFileSync(new URL("../contracts/ci-change-plan-poli
 const intentionalFullVerification = [
   /^\.changeset\/config\.json$/u,
   /^\.github\//u,
-  /^(?:\.gitignore|\.npmrc|\.prettierignore|\.prettierrc|LICENSE)$/u,
+  /^(?:\.gitignore|\.gitleaks\.toml|\.npmrc|\.prettierignore|\.prettierrc|LICENSE)$/u,
   /^(?:package(?:-lock)?\.json|turbo\.json|eslint\.config\.mjs)$/u,
   /^VIREO_THOUSANDS_OF_STARS_MASTER_ROADMAP\.md$/u,
   /^contracts\/(?:ci-change-plan-policy|ecosystem-publication-policy|github-actions-policy|history-record|public-beta-engineering-readiness|release-impact-policy|release-lifecycle-policy|verification-budget-policy)\.json$/u,

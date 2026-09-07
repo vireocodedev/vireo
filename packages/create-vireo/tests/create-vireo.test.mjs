@@ -301,6 +301,15 @@ export {};
     file => file.path === "frontend/vitest.storybook.config.ts",
   );
   await writeFile(join(template, "frontend/vitest.storybook.config.ts"), storybookBaseline.sourceContent);
+  const storybookConfigPolicyBaseline = candidatePolicy.releaseGraph.baselines[activeEdge]["full-stack"].find(
+    file => file.path === "frontend/scripts/storybook-config-policy.test.mjs",
+  );
+  if (storybookConfigPolicyBaseline?.sourceContent !== undefined) {
+    await writeFile(
+      join(template, "frontend/scripts/storybook-config-policy.test.mjs"),
+      storybookConfigPolicyBaseline.sourceContent,
+    );
+  }
   await writeFile(
     join(template, "frontend/pwa-policy.mjs"),
     `export const APP_IDENTITY = Object.freeze({
@@ -522,7 +531,7 @@ test("creates and customizes a project atomically from a local fixture", async (
     assert.equal(frontendPackage.scripts["architecture:check"], immutable086ArchitectureCheck);
     assert.match(
       await readFile(join(target, "frontend/vitest.storybook.config.ts"), "utf8"),
-      /include: \["@testing-library\/dom"\]/u,
+      /include: \["@preact\/signals-react\/runtime", "@testing-library\/dom", "@vireocodedev\/sqlite"\]/u,
     );
     for (const path of [
       "frontend/scripts/lighthouse-audit-support.mjs",
@@ -997,7 +1006,7 @@ test("creates a standalone frontend profile without Java, Gradle, or database fi
     );
     assert.match(
       await readFile(join(target, "vitest.storybook.config.ts"), "utf8"),
-      /include: \["@testing-library\/dom"\]/u,
+      /include: \["@preact\/signals-react\/runtime", "@testing-library\/dom", "@vireocodedev\/sqlite"\]/u,
     );
     for (const path of [
       "scripts/lighthouse-audit-support.mjs",
@@ -1202,10 +1211,10 @@ test("projection compatibility composes every immutable Storybook baseline from 
     for (const profile of ["full-stack", "frontend"]) {
       const templatePath = "frontend/vitest.storybook.config.ts";
       const projectedPath = profile === "frontend" ? "vitest.storybook.config.ts" : templatePath;
-      const sourceBaseline = policy.releaseGraph.baselines["0.8.3->0.8.4"][profile].find(
+      const sourceBaseline = policy.releaseGraph.baselines["0.8.6->0.8.7"][profile].find(
         file => file.path === projectedPath,
       );
-      const targetBaseline = policy.releaseGraph.baselines["0.8.4->0.8.6"][profile].find(
+      const targetBaseline = policy.releaseGraph.baselines["0.8.7->0.9.1"][profile].find(
         file => file.path === projectedPath,
       );
       await writeFile(join(template, templatePath), sourceBaseline.sourceContent);
@@ -1213,8 +1222,12 @@ test("projection compatibility composes every immutable Storybook baseline from 
       const target = join(root, `composed-${profile}`);
       await createVireo({ directory: target, profile, git: false, templateDirectory: template });
 
-      let expected = targetBaseline.sourceContent;
-      for (const transform of targetBaseline.transforms) expected = expected.replace(transform.from, transform.to);
+      let expected = targetBaseline.targetContent;
+      if (expected === undefined) {
+        expected = targetBaseline.sourceContent;
+        for (const transform of targetBaseline.transforms ?? [])
+          expected = expected.replace(transform.from, transform.to);
+      }
       assert.equal(await readFile(join(target, projectedPath), "utf8"), expected);
 
       await writeFile(join(template, templatePath), "// application-owned customization\n");
@@ -1491,7 +1504,7 @@ test("remove-example is dry-run first, rejects drift, removes owned references, 
       await assert.rejects(removeExample(target, true), /Managed-file provenance is invalid/u);
     }
     await writeFile(managedManifestPath, `${JSON.stringify(managedBefore, null, 2)}\n`);
-    const customizedManagedPath = "frontend/scripts/pwa-contract.mjs";
+    const customizedManagedPath = "frontend/scripts/check-pwa-contract.mjs";
     const originalManagedHash = managedBefore.files.find(file => file.path === customizedManagedPath)?.sha256;
     assert.match(originalManagedHash, /^[a-f0-9]{64}$/u);
     await writeFile(
@@ -1529,7 +1542,7 @@ test("remove-example is dry-run first, rejects drift, removes owned references, 
       await Promise.all(
         [
           "frontend/scripts/architecture-policy.test.mjs",
-          "frontend/scripts/pwa-contract.mjs",
+          "frontend/scripts/check-pwa-contract.mjs",
           "frontend/tests/pwa/production-pwa.spec.ts",
         ].map(async path => [path, await readFile(join(target, path), "utf8")]),
       ),

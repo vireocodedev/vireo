@@ -1,0 +1,11 @@
+title = "Vireo secret-scanning policy"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Ignore the Template's own security-policy prose retained verbatim as immutable project-upgrade baseline evidence"
+condition = "AND"
+regexTarget = "line"
+regexes = ["secret scans, signed/provenanced releases"]
+paths = ['''^packages/create-vireo/schema/vireo-upgrade-policy\.json$''']

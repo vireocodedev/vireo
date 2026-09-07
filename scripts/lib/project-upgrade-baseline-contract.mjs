@@ -1,4 +1,5 @@
 export function templatePathForBaseline(profile, path) {
+  if (path.startsWith(".agents/skills/")) return `.vireo/application/${path}`;
   if (profile === "frontend" && path.startsWith("scripts/")) return `frontend/${path}`;
   if (profile === "frontend" && path === "vitest.storybook.config.ts") return `frontend/${path}`;
   return path;

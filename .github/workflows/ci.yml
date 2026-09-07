@@ -359,7 +359,7 @@ jobs:
         if: needs.changes.outputs.routing-ready == 'true' && needs.changes.outputs.project-upgrade == 'true'
         with:
           repository: vireocodedev/vireo-template
-          ref: 0557990f024a8736b6e661f8fc264861deb99b65
+          ref: a04c1b688a7fcc33427d5f4337a06350582ee289
           path: starter-template
           persist-credentials: false
           fetch-depth: 0

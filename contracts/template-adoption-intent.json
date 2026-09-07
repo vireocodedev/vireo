@@ -1,14 +1,90 @@
 {
   "schemaVersion": 1,
-  "status": "adopted",
+  "status": "candidate",
   "template": {
     "repository": "vireocodedev/vireo-template",
-    "version": "0.8.7",
-    "tag": "starter-template@0.8.7",
-    "commit": "0557990f024a8736b6e661f8fc264861deb99b65",
-    "releaseUrl": "https://github.com/vireocodedev/vireo-template/releases/tag/starter-template%400.8.7"
+    "version": "0.9.1",
+    "tag": "starter-template@0.9.1",
+    "commit": "a04c1b688a7fcc33427d5f4337a06350582ee289",
+    "releaseUrl": "https://github.com/vireocodedev/vireo-template/releases/tag/starter-template%400.9.1"
   },
-  "createVireoVersion": "0.8.7",
-  "ecosystemRelease": "npm-0.8.7_jvm-0.3.1",
+  "createVireoVersion": "0.9.1",
+  "ecosystemRelease": "npm-0.9.1_jvm-0.4.0",
+  "releaseManifestSha256": "b2dc1a861e57fe13575bde85f975f80a58a6a51aac7bcccd854846bb92c4b519",
+  "npm": [
+    {
+      "name": "@vireocodedev/history",
+      "version": "0.2.2",
+      "integrity": "sha512-PABfwZZT12hynKZ2/8FWmHtHhnJdasifKYWMF1080gwgaAQ0SXQPsD2lUi2o4+X8R1lUg7cEpmIr4w+RuR4YUg==",
+      "attestationBundleSha256": "43dde47b6834e2183787d245214f4169ebeccb29024153ebbc4360ed32dc2cc6"
+    },
+    {
+      "name": "@vireocodedev/infrastructure",
+      "version": "0.3.0",
+      "integrity": "sha512-F6OFVoymRVXfeR7l22JUXa/7LxGMve0bYpF9NnUWInXI1S9IXezPiK2MuFWK76/9ETZUv6PHnQNIZTe0CMJp4A==",
+      "attestationBundleSha256": "0e6ba9b110f9656a14b9fc183e023a81d5ee079668e24802c7cbaaab881588d4"
+    },
+    {
+      "name": "@vireocodedev/localization",
+      "version": "0.2.2",
+      "integrity": "sha512-QYG+D3s3ODKWYpWRJjJNB/lcOvIGvfssFvOru0wIbtxHYjsadxLfcwwdi0jkc3M/VC/qNFrR5obV46+VGLHT4g==",
+      "attestationBundleSha256": "7ccd92113a660a3f99a8b0dcb6eaf2f986674c77c21ede616c0208fd5af9ec27"
+    },
+    {
+      "name": "@vireocodedev/query",
+      "version": "0.2.2",
+      "integrity": "sha512-FyP8gmgZS62tufgR1GLbkFdnxWhJVWjE1jbKITCfc9o2erc8m2Q9fh1c5MuW8E5iySrFvW4PVUr6hIWbOyrRzg==",
+      "attestationBundleSha256": "7a1564cff988a4ae9835d0f6e8f0dff0adb9c307916c444e7219672fcbfc54b6"
+    },
+    {
+      "name": "@vireocodedev/shell",
+      "version": "0.2.2",
+      "integrity": "sha512-92xUUlO3k0YSKL/mpJK5zJUgUHeFj/xttVSTWDHTqJILiK+QxhS86CZ2dFk0gmKIdinsXUwJkqKK8jUKh70q7w==",
+      "attestationBundleSha256": "e16c2d5dac2b07c266228a458470a31d8870272818c9e253f69f7443e3b0bed5"
+    },
+    {
+      "name": "@vireocodedev/sqlite",
+      "version": "0.2.3",
+      "integrity": "sha512-xc+Y+W1v+sWcsswTugEQYnUN/G6+oA/GLWB0UGKMHgPFPre01c9qPnXrNpFOGtgD+uax7RgdHE5V2HpQhEQYTw==",
+      "attestationBundleSha256": "ede6d2959b670ed78cb896818c27c1f7066fcb79df75216735bfeb7dd6595c0f"
+    },
+    {
+      "name": "@vireocodedev/ui",
+      "version": "0.3.2",
+      "integrity": "sha512-mzvPEW2RrlcetIGJv5E/vWgaBYZsfGUQJnOrYD+wCZd9KH06JazcB5SxE2ejPWaxY4TJNuGBEYi0idFxDX7bJA==",
+      "attestationBundleSha256": "384b29da84a4e20c9f0d7a5115115883f828d65c4bec6b69c3d1b68e824dbfa8"
+    }
+  ],
+  "maven": {
+    "group": "com.vireocode",
+    "version": "0.4.0",
+    "modules": ["vireo-auth", "vireo-bom", "vireo-core", "vireo-history", "vireo-offline", "vireo-query"],
+    "moduleDigests": {
+      "vireo-auth": {
+        "sha256": "fd3b3c5d3ad6b896c7daa4a2d4e5de4c41953b66a5c6c599d0367be9bdfdb21a",
+        "signatureSha256": "ec03f57b4ca0eb3a7251d7f46e6807d49444987455b0dce31cb71fe145e8f338"
+      },
+      "vireo-bom": {
+        "sha256": "81699febf6b896246dfad6f49972ac9aac6f8bef1c8f71cf439c67d14b6f950c",
+        "signatureSha256": "d2d0cacafe272d46038211e12f778f37ecb1af0cee49b36cdcd3181741398d31"
+      },
+      "vireo-core": {
+        "sha256": "79e54dfd1b8fa3f33367d10c227fb095acd93112c160df27d909a4a9704fb36c",
+        "signatureSha256": "e0e1afe831dda44eb33fe26f5da5124dd92ab47bba41281835338259d17e08a1"
+      },
+      "vireo-history": {
+        "sha256": "897e032dc36d42f98ec963b23ca0516155166d54f79a61e47a1a55bf15a81731",
+        "signatureSha256": "ea555a0441421e6f94a0123c492bbe72221e380adc116873ffeabdc5e3c91b97"
+      },
+      "vireo-offline": {
+        "sha256": "c728b7f6900a3c3fc2a4a7bdd0e19f09100b3107ffffbf8cfd06302f71382b81",
+        "signatureSha256": "45d37c2d6fa79f464cb669d7a01cbd758087540f2909ef6017feaf6f5bac0711"
+      },
+      "vireo-query": {
+        "sha256": "a4ce9ab1880100e9cd7a719994f5f88fb2a3f0cf8a33e879bd53e66a6cd978cf",
+        "signatureSha256": "d9811ae523aca1619f1bf645bb62ffea7080344b0c1fc8a909899b501b28383b"
+      }
+    }
+  },
   "source": "immutable-template-release"
 }
