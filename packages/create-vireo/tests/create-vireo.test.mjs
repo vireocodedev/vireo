@@ -301,6 +301,15 @@ export {};
     file => file.path === "frontend/vitest.storybook.config.ts",
   );
   await writeFile(join(template, "frontend/vitest.storybook.config.ts"), storybookBaseline.sourceContent);
+  const storybookConfigPolicyBaseline = candidatePolicy.releaseGraph.baselines[activeEdge]["full-stack"].find(
+    file => file.path === "frontend/scripts/storybook-config-policy.test.mjs",
+  );
+  if (storybookConfigPolicyBaseline?.sourceContent !== undefined) {
+    await writeFile(
+      join(template, "frontend/scripts/storybook-config-policy.test.mjs"),
+      storybookConfigPolicyBaseline.sourceContent,
+    );
+  }
   await writeFile(
     join(template, "frontend/pwa-policy.mjs"),
     `export const APP_IDENTITY = Object.freeze({

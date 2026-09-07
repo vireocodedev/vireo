@@ -482,14 +482,22 @@ export async function currentProjectionCompatibilityRequirements(profile: "full-
   const target = graph.releases.find(release => release.release === targetRelease);
   if (!source || !target)
     throw new VireoUpgradeError("VIR-UPG-001", "Projection compatibility requirements have no adjacent release nodes.");
-  const files = edgeBaselines(policy, source.release, target.release, profile).filter(baseline =>
-    baseline.path.endsWith("vitest.storybook.config.ts"),
-  );
-  if (files.length !== 1)
+  const edgeBaselineFiles = edgeBaselines(policy, source.release, target.release, profile);
+  const optimizerFiles = edgeBaselineFiles.filter(baseline => baseline.path.endsWith("vitest.storybook.config.ts"));
+  if (optimizerFiles.length !== 1)
     throw new VireoUpgradeError(
       "VIR-UPG-001",
       `Active projection compatibility for ${profile} must declare one immutable Storybook optimizer baseline.`,
     );
+  const optimizerTestFiles = edgeBaselineFiles.filter(baseline =>
+    baseline.path.endsWith("storybook-config-policy.test.mjs"),
+  );
+  if (optimizerTestFiles.length > 1)
+    throw new VireoUpgradeError(
+      "VIR-UPG-001",
+      `Active projection compatibility for ${profile} must declare at most one immutable Storybook optimizer test baseline.`,
+    );
+  const files = [...optimizerFiles, ...optimizerTestFiles];
   return files.map(baseline => {
     const compatibleContents = new Set<string>();
     const visitedReleases = new Set<string>();
