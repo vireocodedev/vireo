@@ -41,7 +41,10 @@ export async function createInstallationToken({ appId, privateKey, fetchResponse
       Authorization: `Bearer ${jwt}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ repositories: ["vireo"], permissions: { contents: "write", pull_requests: "write" } }),
+    body: JSON.stringify({
+      repositories: ["vireo"],
+      permissions: { contents: "write", pull_requests: "write", workflows: "write" },
+    }),
     redirect: "error",
     signal: AbortSignal.timeout(10_000),
   });
@@ -54,6 +57,7 @@ export async function createInstallationToken({ appId, privateKey, fetchResponse
     issued?.repository_selection !== "selected" ||
     issued?.permissions?.contents !== "write" ||
     issued?.permissions?.pull_requests !== "write" ||
+    issued?.permissions?.workflows !== "write" ||
     (issued?.permissions?.metadata !== undefined && issued.permissions.metadata !== "read")
   ) {
     throw new Error("GitHub App installation token was not narrowed to the required Vireo repository permissions.");

@@ -21,7 +21,7 @@ test("discovers the exact authenticated App bot identity for Git authorship", as
     {
       token: "installation-token-value",
       repository_selection: "selected",
-      permissions: { contents: "write", pull_requests: "write", metadata: "read" },
+      permissions: { contents: "write", pull_requests: "write", workflows: "write", metadata: "read" },
     },
     { login: "vireo-template-adoption[bot]", id: 789, type: "Bot" },
   ];
