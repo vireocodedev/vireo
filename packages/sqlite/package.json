@@ -50,8 +50,8 @@
     "@sqlite.org/sqlite-wasm": "^3.53.0-build1",
     "jsdom": "^30.0.1",
     "typescript": "npm:@typescript/typescript6@^6.0.2",
-    "vite": "^8.2.2",
-    "vite-plugin-dts": "^5.0.3",
+    "vite": "^8.3.0",
+    "vite-plugin-dts": "^5.1.0",
     "vitest": "^4.1.11"
   },
   "publishConfig": {
