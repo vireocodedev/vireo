@@ -17,7 +17,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-webmvc'
     api 'org.springframework.boot:spring-boot-starter-security'
     api "org.mapstruct:mapstruct:${mapstructVersion}"
-    api 'org.openapitools:jackson-databind-nullable:0.2.11'
+    api 'org.openapitools:jackson-databind-nullable:0.2.12'
 
     // Every module's controllers carry @Tag / @Operation, so this is part of
     // the compile surface rather than an implementation detail.
